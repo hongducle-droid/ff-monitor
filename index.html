@@ -20,45 +20,6 @@
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
   .pill { font-size: 9px; letter-spacing: 1.5px; color: #555; display: flex; align-items: center; gap: 5px; }
 
-  /* API KEY PANEL */
-  .api-panel {
-    background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 6px;
-    margin-bottom: 10px; overflow: hidden;
-  }
-  .api-panel-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 12px; border-bottom: 0.5px solid #1a1a2a; cursor: pointer; user-select: none;
-  }
-  .api-panel-title { font-size: 9px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
-  .api-status { font-size: 8px; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px; }
-  .api-status.ok  { background: #081a0e; color: #22cc66; border: 0.5px solid #22cc66; }
-  .api-status.err { background: #1a0808; color: #ff4444; border: 0.5px solid #ff4444; }
-  .api-status.none { background: #0e0e1a; color: #444; border: 0.5px solid #222; }
-  .api-panel-body { padding: 10px 12px; display: none; }
-  .api-panel-body.open { display: block; }
-  .api-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
-  .api-inp {
-    flex: 1; background: #0c0c18; border: 0.5px solid #1c1c2e; border-radius: 4px;
-    padding: 6px 10px; color: #777; font-size: 10px; font-family: 'Courier New', monospace;
-    outline: none; transition: border-color 0.2s; min-width: 0; letter-spacing: 1px;
-  }
-  .api-inp:focus { border-color: #2e2e4e; color: #bbb; }
-  .api-inp::placeholder { color: #1a1a2a; }
-  .api-save-btn {
-    padding: 6px 14px; background: #ff4444; border: none; border-radius: 4px;
-    color: #fff; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
-    letter-spacing: 1.5px; text-transform: uppercase; transition: all 0.13s; white-space: nowrap;
-  }
-  .api-save-btn:hover { background: #cc3333; }
-  .api-clear-btn {
-    padding: 6px 10px; background: transparent; border: 0.5px solid #22223a; border-radius: 4px;
-    color: #444; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
-    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s; white-space: nowrap;
-  }
-  .api-clear-btn:hover { border-color: #ff4444; color: #ff4444; }
-  .api-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; line-height: 1.6; }
-  .api-note a { color: #3a3a6a; text-decoration: none; }
-  .api-note a:hover { color: #ff4444; }
 
   /* CV BAR */
   .cv-section { display: grid; gap: 8px; margin-bottom: 10px; }
@@ -234,7 +195,6 @@
   /* FULLSCREEN */
   body.fs-mode { padding: 0; overflow: hidden; }
   body.fs-mode .topbar,
-  body.fs-mode .api-panel,
   body.fs-mode .cv-section,
   body.fs-mode .total-bar,
   body.fs-mode .url-panel,
@@ -276,26 +236,6 @@
   </div>
 </div>
 
-<!-- API KEY PANEL -->
-<div class="api-panel">
-  <div class="api-panel-head" onclick="toggleApiPanel()">
-    <span class="api-panel-title">🔑 YouTube API Key</span>
-    <span class="api-status none" id="apiStatus">NO KEY</span>
-  </div>
-  <div class="api-panel-body" id="apiPanelBody">
-    <div class="api-row">
-      <input class="api-inp" id="apiKeyInput" type="password" placeholder="AIzaSy...  (YouTube Data API v3 key)"
-        onkeydown="if(event.key==='Enter') saveApiKey()">
-      <button class="api-save-btn" onclick="saveApiKey()">Save</button>
-      <button class="api-clear-btn" onclick="clearApiKey()">Clear</button>
-    </div>
-    <div class="api-note">
-      Key được lưu trong localStorage của browser, không gửi đi đâu khác.<br>
-      Tạo key tại: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>
-      → Credentials → Create API Key → Restrict → YouTube Data API v3
-    </div>
-  </div>
-</div>
 
 <!-- CV BAR -->
 <div class="cv-section" id="cvSection"></div>
@@ -384,7 +324,7 @@ let urlRows    = DEFAULT_STREAMS.map(s => s.url);
 let allMuted   = false;
 let stopped    = false;
 let countdown  = REFRESH_INTERVAL;
-let apiKey     = localStorage.getItem('yt_api_key') || '';
+let apiKey     = localStorage.getItem('yt_api_key') || 'AIzaSyAh062R3l4rC5DphWFy9iMmqIHGCSC9oBs';
 
 /* ── HELPERS ── */
 function extractVid(url) {
@@ -416,35 +356,9 @@ function colsForCount(n) {
 }
 
 /* ── API KEY ── */
-function toggleApiPanel() {
-  document.getElementById('apiPanelBody').classList.toggle('open');
-}
 
-function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val) return;
-  apiKey = val;
-  localStorage.setItem('yt_api_key', apiKey);
-  document.getElementById('apiKeyInput').value = '';
-  updateApiStatus('ok');
-  fetchAllCv();
-}
 
-function clearApiKey() {
-  apiKey = '';
-  localStorage.removeItem('yt_api_key');
-  document.getElementById('apiKeyInput').value = '';
-  streams.forEach(s => s.cv = null);
-  updateApiStatus('none');
-  renderCvSection();
-  renderTotals();
-}
 
-function updateApiStatus(state) {
-  const el = document.getElementById('apiStatus');
-  el.className = 'api-status ' + state;
-  el.textContent = state === 'ok' ? 'CONNECTED' : state === 'err' ? 'ERROR' : 'NO KEY';
-}
 
 /* ── FETCH CV FROM YOUTUBE API ── */
 async function fetchAllCv() {
@@ -458,11 +372,10 @@ async function fetchAllCv() {
       `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${ids}&key=${apiKey}`
     );
     if (!res.ok) {
-      if (res.status === 400 || res.status === 403) updateApiStatus('err');
+      if (res.status === 400 || res.status === 403)
       return;
     }
     const data = await res.json();
-    updateApiStatus('ok');
 
     // Map video id → concurrentViewers
     const cvMap = {};
@@ -481,7 +394,6 @@ async function fetchAllCv() {
     renderCvSection();
     renderTotals();
   } catch(e) {
-    updateApiStatus('err');
   }
 }
 
@@ -753,11 +665,6 @@ function tick() {
 }
 
 /* ── INIT ── */
-if (apiKey) {
-  updateApiStatus('ok');
-  // Show masked key hint
-  document.getElementById('apiKeyInput').placeholder = 'Key saved — paste new key to replace';
-}
 renderAll();
 renderUrlPanel();
 if (apiKey) fetchAllCv();
