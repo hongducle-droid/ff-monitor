@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FF Esports — Live Monitor (WIP)</title>
+<title>FF Esports — Live Monitor</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #08080f; color: #e0e0e8; font-family: 'Courier New', monospace; min-height: 100vh; padding: 12px; }
@@ -17,9 +17,48 @@
   .topbar-right { display: flex; gap: 14px; align-items: center; }
   .clock { font-size: 12px; color: #ff4444; letter-spacing: 2px; }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4444; display: inline-block; animation: blink 1.3s infinite; }
-  .dot.green { background: #22cc66; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
   .pill { font-size: 9px; letter-spacing: 1.5px; color: #555; display: flex; align-items: center; gap: 5px; }
+
+  /* API KEY PANEL */
+  .api-panel {
+    background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 6px;
+    margin-bottom: 10px; overflow: hidden;
+  }
+  .api-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: 0.5px solid #1a1a2a; cursor: pointer; user-select: none;
+  }
+  .api-panel-title { font-size: 9px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+  .api-status { font-size: 8px; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px; }
+  .api-status.ok  { background: #081a0e; color: #22cc66; border: 0.5px solid #22cc66; }
+  .api-status.err { background: #1a0808; color: #ff4444; border: 0.5px solid #ff4444; }
+  .api-status.none { background: #0e0e1a; color: #444; border: 0.5px solid #222; }
+  .api-panel-body { padding: 10px 12px; display: none; }
+  .api-panel-body.open { display: block; }
+  .api-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .api-inp {
+    flex: 1; background: #0c0c18; border: 0.5px solid #1c1c2e; border-radius: 4px;
+    padding: 6px 10px; color: #777; font-size: 10px; font-family: 'Courier New', monospace;
+    outline: none; transition: border-color 0.2s; min-width: 0; letter-spacing: 1px;
+  }
+  .api-inp:focus { border-color: #2e2e4e; color: #bbb; }
+  .api-inp::placeholder { color: #1a1a2a; }
+  .api-save-btn {
+    padding: 6px 14px; background: #ff4444; border: none; border-radius: 4px;
+    color: #fff; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px; text-transform: uppercase; transition: all 0.13s; white-space: nowrap;
+  }
+  .api-save-btn:hover { background: #cc3333; }
+  .api-clear-btn {
+    padding: 6px 10px; background: transparent; border: 0.5px solid #22223a; border-radius: 4px;
+    color: #444; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s; white-space: nowrap;
+  }
+  .api-clear-btn:hover { border-color: #ff4444; color: #ff4444; }
+  .api-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; line-height: 1.6; }
+  .api-note a { color: #3a3a6a; text-decoration: none; }
+  .api-note a:hover { color: #ff4444; }
 
   /* CV BAR */
   .cv-section { display: grid; gap: 8px; margin-bottom: 10px; }
@@ -32,8 +71,9 @@
   .cv-num { font-size: 20px; font-weight: bold; letter-spacing: 1px; line-height: 1.1; }
   .cv-label { font-size: 7px; color: #333; letter-spacing: 1.5px; text-transform: uppercase; }
   .cv-track { height: 2px; background: #1a1a2a; border-radius: 2px; margin-top: 4px; overflow: hidden; }
-  .cv-fill { height: 2px; border-radius: 2px; transition: width 1s ease; }
+  .cv-fill  { height: 2px; border-radius: 2px; transition: width 1.2s ease; }
 
+  /* TOTAL BAR */
   .total-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 8px 14px; background: #0e0e1a; border: 0.5px solid #22223a;
@@ -45,7 +85,7 @@
   .total-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
   .countdown-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; }
   .countdown-track { width: 140px; height: 2px; background: #1a1a2a; border-radius: 2px; overflow: hidden; }
-  .countdown-fill { height: 2px; background: #ff4444; border-radius: 2px; transition: width 1s linear; }
+  .countdown-fill  { height: 2px; background: #ff4444; border-radius: 2px; transition: width 1s linear; }
   .refresh-btn {
     padding: 3px 10px; background: transparent; border: 0.5px solid #22223a; border-radius: 3px;
     color: #444; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
@@ -53,26 +93,21 @@
   }
   .refresh-btn:hover { border-color: #ff4444; color: #ff4444; }
 
-  /* URL INPUT PANEL */
-  .url-panel {
-    background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 6px;
-    margin-bottom: 10px; overflow: hidden;
-  }
+  /* URL PANEL */
+  .url-panel { background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
   .url-panel-head {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 12px; border-bottom: 0.5px solid #1a1a2a; cursor: pointer;
-    user-select: none;
+    padding: 8px 12px; border-bottom: 0.5px solid #1a1a2a; cursor: pointer; user-select: none;
   }
   .url-panel-title { font-size: 9px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
   .url-panel-toggle { font-size: 10px; color: #333; transition: transform 0.2s; }
   .url-panel-toggle.open { transform: rotate(180deg); }
   .url-panel-body { padding: 10px 12px; display: none; }
   .url-panel-body.open { display: block; }
-
   .url-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-  .url-row { display: flex; gap: 6px; align-items: center; }
-  .url-num { font-size: 9px; color: #2a2a4a; min-width: 18px; text-align: right; }
-  .url-inp {
+  .url-row  { display: flex; gap: 6px; align-items: center; }
+  .url-num  { font-size: 9px; color: #2a2a4a; min-width: 18px; text-align: right; }
+  .url-inp  {
     flex: 1; background: #0c0c18; border: 0.5px solid #1c1c2e; border-radius: 4px;
     padding: 5px 9px; color: #777; font-size: 9px; font-family: 'Courier New', monospace;
     outline: none; transition: border-color 0.2s; min-width: 0;
@@ -82,10 +117,9 @@
   .url-del {
     padding: 4px 8px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
     color: #333; font-size: 9px; cursor: pointer; font-family: 'Courier New', monospace;
-    letter-spacing: 1px; transition: all 0.13s; flex-shrink: 0;
+    transition: all 0.13s; flex-shrink: 0;
   }
   .url-del:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
-
   .url-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .url-add-btn {
     padding: 5px 12px; background: #10101a; border: 0.5px solid #22223a; border-radius: 4px;
@@ -101,7 +135,7 @@
   .url-apply-btn:hover { background: #cc3333; }
   .url-count-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; margin-left: auto; }
 
-  /* LAYOUT CONTROLS */
+  /* LAYOUT */
   .layout-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .lay-label { font-size: 9px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
   .lay-btn {
@@ -112,49 +146,7 @@
   .lay-btn:hover { border-color: #ff4444; color: #ff4444; }
   .lay-btn.active { background: #ff4444; border-color: #ff4444; color: #fff; }
 
-  /* PLAYER GRID */
-  .player-grid { display: grid; gap: 8px; }
-  .player-grid.cols-1 { grid-template-columns: 1fr; }
-  .player-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-  .player-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-  .player-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .player-grid.sbs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-  .player-card {
-    background: #0c0c16; border: 0.5px solid #1c1c2e; border-radius: 6px;
-    overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s;
-  }
-  .player-card:hover { border-color: #2e2e4e; }
-  .player-card.active { border-color: #ff4444; box-shadow: 0 0 0 1px #ff444420; }
-
-  .player-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 5px 9px; background: #08080f; border-bottom: 0.5px solid #1a1a2c; flex-shrink: 0;
-  }
-  .player-meta { display: flex; flex-direction: column; gap: 1px; }
-  .player-tag { font-size: 7px; color: #333; letter-spacing: 2px; text-transform: uppercase; }
-  .player-name { font-size: 10px; color: #aaa; font-weight: bold; letter-spacing: 0.5px; }
-  .player-head-right { display: flex; align-items: center; gap: 5px; }
-  .live-badge { font-size: 8px; padding: 2px 6px; background: #ff4444; color: #fff; border-radius: 3px; letter-spacing: 1px; }
-  .scene-num { font-size: 9px; color: #1e1e3a; padding: 2px 5px; background: #0a0a12; border: 0.5px solid #1a1a2a; border-radius: 3px; }
-  .del-btn {
-    padding: 2px 6px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
-    color: #2a2a4a; font-size: 9px; cursor: pointer; font-family: 'Courier New', monospace;
-    transition: all 0.13s; line-height: 1;
-  }
-  .del-btn:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
-
-  .video-wrap { position: relative; background: #050508; aspect-ratio: 16/9; flex: 1; }
-  .video-wrap iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
-
-  /* FULLSCREEN VIEW MODE */
-  body.fs-mode { padding: 0; overflow: hidden; }
-  body.fs-mode .topbar,
-  body.fs-mode .cv-section,
-  body.fs-mode .total-bar,
-  body.fs-mode .url-panel,
-
-  /* CONTROL BUTTONS */
+  /* CONTROLS */
   .ctrl-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .ctrl-label { font-size: 9px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
   .ctrl-btn {
@@ -164,45 +156,45 @@
     font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase;
     transition: all 0.15s;
   }
-  .ctrl-btn:hover { border-color: #aaa; color: #aaa; }
-  .ctrl-btn.stop:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
-  .ctrl-btn.sync:hover { border-color: #22cc66; color: #22cc66; background: #081a0e; }
+  .ctrl-btn.stop:hover     { border-color: #ff4444; color: #ff4444; background: #1a0808; }
+  .ctrl-btn.sync:hover     { border-color: #22cc66; color: #22cc66; background: #081a0e; }
   .ctrl-btn.mute-all:hover { border-color: #ffaa00; color: #ffaa00; background: #1a1200; }
+  .ctrl-btn.stop.active     { border-color: #ff4444; color: #ff4444; background: #1a0808; }
   .ctrl-btn.mute-all.active { border-color: #ffaa00; color: #ffaa00; background: #1a1200; }
-  .ctrl-btn.stop.active { border-color: #ff4444; color: #ff4444; background: #1a0808; }
   .ctrl-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  body.fs-mode .ctrl-row { display: none !important; }
 
-  body.fs-mode .layout-row,
-  body.fs-mode .footer-bar { display: none !important; }
-  body.fs-mode .player-grid {
-    position: fixed; inset: 0;
-    display: flex !important; flex-direction: row; flex-wrap: wrap;
-    gap: 3px; background: #000; padding: 3px;
-    height: 100vh; width: 100vw; align-content: stretch; align-items: stretch;
-  }
-  body.fs-mode .player-card {
-    flex: 1 1 0; min-width: 0; min-height: 0;
-    border-radius: 4px; display: flex; flex-direction: column;
-  }
-  body.fs-mode .video-wrap {
-    flex: 1 1 0; min-height: 0; aspect-ratio: unset !important;
-    position: relative;
-  }
-  body.fs-mode .player-foot { display: none; }
-  body.fs-mode .player-head { padding: 3px 8px; flex-shrink: 0; }
-  body.fs-mode .player-tag { display: none; }
-  body.fs-mode .player-name { font-size: 9px; }
-  #fs-btn {
-    position: fixed; bottom: 14px; right: 14px; z-index: 9999;
-    padding: 6px 14px; background: #10101a; border: 0.5px solid #22223a;
-    border-radius: 4px; color: #555; font-size: 9px; cursor: pointer;
-    font-family: 'Courier New', monospace; letter-spacing: 1.5px; text-transform: uppercase;
-    transition: all 0.15s; box-shadow: 0 2px 8px #00000066;
-  }
-  #fs-btn:hover { border-color: #ff4444; color: #ff4444; }
-  body.fs-mode #fs-btn { background: #1a0808; border-color: #ff4444; color: #ff4444; }
+  /* PLAYER GRID */
+  .player-grid { display: grid; gap: 8px; }
+  .player-grid.cols-1 { grid-template-columns: 1fr; }
+  .player-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .player-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .player-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .player-grid.sbs    { grid-template-columns: repeat(4, minmax(0,1fr)); }
 
+  .player-card {
+    background: #0c0c16; border: 0.5px solid #1c1c2e; border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s;
+  }
+  .player-card:hover  { border-color: #2e2e4e; }
+  .player-card.active { border-color: #ff4444; box-shadow: 0 0 0 1px #ff444420; }
+  .player-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 9px; background: #08080f; border-bottom: 0.5px solid #1a1a2c; flex-shrink: 0;
+  }
+  .player-meta { display: flex; flex-direction: column; gap: 1px; }
+  .player-tag  { font-size: 7px; color: #333; letter-spacing: 2px; text-transform: uppercase; }
+  .player-name { font-size: 10px; color: #aaa; font-weight: bold; }
+  .player-head-right { display: flex; align-items: center; gap: 5px; }
+  .live-badge { font-size: 8px; padding: 2px 6px; background: #ff4444; color: #fff; border-radius: 3px; letter-spacing: 1px; }
+  .scene-num  { font-size: 9px; color: #1e1e3a; padding: 2px 5px; background: #0a0a12; border: 0.5px solid #1a1a2a; border-radius: 3px; }
+  .del-btn {
+    padding: 2px 6px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
+    color: #2a2a4a; font-size: 9px; cursor: pointer; font-family: 'Courier New', monospace;
+    transition: all 0.13s; line-height: 1;
+  }
+  .del-btn:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
+  .video-wrap { position: relative; background: #050508; aspect-ratio: 16/9; flex: 1; }
+  .video-wrap iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
   .player-foot {
     display: flex; align-items: center; gap: 5px;
     padding: 5px 8px; background: #08080f; border-top: 0.5px solid #1a1a2c; flex-shrink: 0;
@@ -221,15 +213,11 @@
   }
   .foot-btn:hover { border-color: #ff4444; color: #ff4444; }
   .foot-btn.muted { border-color: #ff4444; color: #ff4444; }
-
   .empty-state {
-    text-align: center; padding: 40px 20px;
-    border: 0.5px dashed #1c1c2e; border-radius: 6px; color: #2a2a4a;
-    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer; transition: border-color 0.2s;
+    text-align: center; padding: 40px 20px; border: 0.5px dashed #1c1c2e; border-radius: 6px;
+    color: #2a2a4a; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
   }
   .empty-state:hover { border-color: #3a3a5a; color: #4a4a6a; }
-
   .footer-bar {
     margin-top: 10px; padding: 7px 12px; background: #0a0a12;
     border: 0.5px solid #16162a; border-radius: 6px;
@@ -242,17 +230,70 @@
     letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s;
   }
   .open-all-btn:hover { border-color: #555; color: #888; }
+
+  /* FULLSCREEN */
+  body.fs-mode { padding: 0; overflow: hidden; }
+  body.fs-mode .topbar,
+  body.fs-mode .api-panel,
+  body.fs-mode .cv-section,
+  body.fs-mode .total-bar,
+  body.fs-mode .url-panel,
+  body.fs-mode .layout-row,
+  body.fs-mode .ctrl-row,
+  body.fs-mode .footer-bar { display: none !important; }
+  body.fs-mode .player-grid {
+    position: fixed; inset: 0;
+    display: flex !important; flex-direction: row; flex-wrap: wrap;
+    gap: 3px; background: #000; padding: 3px;
+    height: 100vh; width: 100vw; align-content: stretch; align-items: stretch;
+  }
+  body.fs-mode .player-card { flex: 1 1 0; min-width: 0; min-height: 0; border-radius: 4px; display: flex; flex-direction: column; }
+  body.fs-mode .video-wrap  { flex: 1 1 0; min-height: 0; aspect-ratio: unset !important; position: relative; }
+  body.fs-mode .player-foot { display: none; }
+  body.fs-mode .player-head { padding: 3px 8px; flex-shrink: 0; }
+  body.fs-mode .player-tag  { display: none; }
+  body.fs-mode .player-name { font-size: 9px; }
+  #fs-btn {
+    position: fixed; bottom: 14px; right: 14px; z-index: 9999;
+    padding: 6px 14px; background: #10101a; border: 0.5px solid #22223a;
+    border-radius: 4px; color: #555; font-size: 9px; cursor: pointer;
+    font-family: 'Courier New', monospace; letter-spacing: 1.5px; text-transform: uppercase;
+    transition: all 0.15s; box-shadow: 0 2px 8px #00000066;
+  }
+  #fs-btn:hover { border-color: #ff4444; color: #ff4444; }
+  body.fs-mode #fs-btn { background: #1a0808; border-color: #ff4444; color: #ff4444; }
 </style>
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo">⬛ FF ESPORTS — LIVE MONITOR(WIP)</div>
+  <div class="logo">⬛ FF ESPORTS — LIVE MONITOR</div>
   <div class="topbar-right">
     <span class="pill"><span class="dot"></span><span id="streamCount">3</span> STREAMS</span>
     <span class="pill" style="color:#333;">GARENA PRODUCTION</span>
     <span class="clock" id="clock">00:00:00</span>
+  </div>
+</div>
+
+<!-- API KEY PANEL -->
+<div class="api-panel">
+  <div class="api-panel-head" onclick="toggleApiPanel()">
+    <span class="api-panel-title">🔑 YouTube API Key</span>
+    <span class="api-status none" id="apiStatus">NO KEY</span>
+  </div>
+  <div class="api-panel-body" id="apiPanelBody">
+    <div class="api-row">
+      <input class="api-inp" id="apiKeyInput" type="password" placeholder="AIzaSy...  (YouTube Data API v3 key)"
+        onkeydown="if(event.key==='Enter') saveApiKey()">
+      <button class="api-save-btn" onclick="saveApiKey()">Save</button>
+      <button class="api-clear-btn" onclick="clearApiKey()">Clear</button>
+    </div>
+    <div class="api-note">
+      Key được lưu trong localStorage của browser, không gửi đi đâu khác.<br>
+      Tạo key tại: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>
+      → Credentials → Create API Key → Restrict → YouTube Data API v3
+    </div>
   </div>
 </div>
 
@@ -266,13 +307,13 @@
     <span class="total-num" id="totalNum">—</span>
   </div>
   <div class="total-right">
-    <span class="countdown-note" id="countdownNote">Next update in 30s</span>
+    <span class="countdown-note" id="countdownNote">Next update in 60s</span>
     <div class="countdown-track"><div class="countdown-fill" id="countdownFill" style="width:100%"></div></div>
     <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh now</button>
   </div>
 </div>
 
-<!-- URL INPUT PANEL -->
+<!-- URL PANEL -->
 <div class="url-panel">
   <div class="url-panel-head" onclick="togglePanel()">
     <span class="url-panel-title">⚙ Manage streams</span>
@@ -288,10 +329,10 @@
   </div>
 </div>
 
-<!-- LAYOUT TOGGLE -->
+<!-- LAYOUT -->
 <div class="layout-row">
   <span class="lay-label">Layout:</span>
-  <button class="lay-btn" onclick="setLayout('auto',this)">Auto</button>
+  <button class="lay-btn active" onclick="setLayout('auto',this)">Auto</button>
   <button class="lay-btn" onclick="setLayout('1',this)">1</button>
   <button class="lay-btn" onclick="setLayout('2',this)">2</button>
   <button class="lay-btn" onclick="setLayout('3',this)">3</button>
@@ -299,7 +340,7 @@
   <button class="lay-btn" onclick="setLayout('sbs',this)">Side by side</button>
 </div>
 
-<!-- CONTROL BUTTONS -->
+<!-- CONTROLS -->
 <div class="ctrl-row">
   <span class="ctrl-label">Controls:</span>
   <button class="ctrl-btn stop" id="btnStop" onclick="stopAll()">
@@ -309,7 +350,8 @@
     <span style="font-size:11px;line-height:1;">↻</span> Sync to live
   </button>
   <button class="ctrl-btn mute-all" id="btnMuteAll" onclick="toggleMuteAll()">
-    <span style="font-size:10px;line-height:1;" id="muteIcon">🔇</span> <span id="muteLabel">Mute all</span>
+    <span style="font-size:10px;line-height:1;" id="muteIcon">🔇</span>
+    <span id="muteLabel">Mute all</span>
   </button>
 </div>
 
@@ -322,22 +364,27 @@
   <button class="open-all-btn" onclick="openAll()">↗ Open all in YouTube</button>
 </div>
 
+<button id="fs-btn" onclick="toggleFs()">⛶ View</button>
+
 <script>
+/* ── CONFIG ── */
+const REFRESH_INTERVAL = 60; // YouTube API quota: 60s refresh
 const COLORS = ['#ff4444','#22cc66','#4488ff','#ffaa00','#cc44ff','#00cccc','#ff6688','#88ff44'];
-const CV_BASES = [18000,9000,12000,7000,5000,6000,4000,8000];
-const REFRESH_INTERVAL = 30;
 
 const DEFAULT_STREAMS = [
-  { label:'FFWS SEA 2026', url:'https://www.youtube.com/watch?v=_ONQTKGn6n0', vid:'_ONQTKGn6n0' },
-  { label:'FFWS NP 2026',  url:'https://www.youtube.com/watch?v=AGEAsXrkm4E', vid:'AGEAsXrkm4E' },
+  { label:'FFWS SEA 2026',   url:'https://www.youtube.com/watch?v=_ONQTKGn6n0', vid:'_ONQTKGn6n0' },
+  { label:'FFWS NP 2026',    url:'https://www.youtube.com/watch?v=AGEAsXrkm4E', vid:'AGEAsXrkm4E' },
   { label:'FFWS INDIA 2026', url:'https://www.youtube.com/watch?v=FSfGprpeeXU', vid:'FSfGprpeeXU' },
 ];
 
-let streams = DEFAULT_STREAMS.map((s,i) => ({ ...s, muted: false, cv: null, maxCv: CV_BASES[i] }));
-let activeIdx = 0;
+let streams    = DEFAULT_STREAMS.map(s => ({ ...s, muted: false, cv: null, maxCv: 0 }));
+let activeIdx  = 0;
 let layoutMode = 'auto';
-let countdown = REFRESH_INTERVAL;
-let urlRows = DEFAULT_STREAMS.map(s => s.url);
+let urlRows    = DEFAULT_STREAMS.map(s => s.url);
+let allMuted   = false;
+let stopped    = false;
+let countdown  = REFRESH_INTERVAL;
+let apiKey     = localStorage.getItem('yt_api_key') || '';
 
 /* ── HELPERS ── */
 function extractVid(url) {
@@ -346,42 +393,96 @@ function extractVid(url) {
   return m ? m[1] : '';
 }
 
-function fmtNum(n) {
-  if (!n) return '—';
-  if (n >= 1000000) return (n/1e6).toFixed(2)+'M';
-  if (n >= 1000)    return (n/1000).toFixed(1)+'K';
-  return n.toLocaleString();
+function autoLabel(url, idx) {
+  return extractVid(url) ? 'SCENE ' + String(idx+1).padStart(2,'0') : 'STREAM '+(idx+1);
 }
 
-function autoLabel(url, idx) {
-  const vid = extractVid(url);
-  return vid ? 'SCENE ' + String(idx+1).padStart(2,'0') : 'STREAM '+(idx+1);
+function fmtNum(n) {
+  if (n === null || n === undefined) return '—';
+  if (n >= 1000000) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1000)    return (n/1000).toFixed(1)+'K';
+  return Number(n).toLocaleString();
 }
 
 function colsForCount(n) {
-  if (layoutMode === 'sbs') return Math.min(n, 4);
-  if (layoutMode !== 'auto') return parseInt(layoutMode);
+  if (layoutMode === 'sbs')   return Math.min(n, 4);
+  if (layoutMode !== 'auto')  return parseInt(layoutMode);
   if (n === 1) return 1;
   if (n <= 2)  return 2;
-  if (n === 3)  return 3;
-  if (n === 4)  return 2;
+  if (n === 3) return 3;
+  if (n === 4) return 2;
   if (n <= 6)  return 3;
   return 4;
 }
 
-/* ── CV SIMULATE ── */
-function simulateCv(i) {
-  const prev = streams[i].cv || CV_BASES[i] || 5000;
-  const delta = Math.floor((Math.random()-0.47)*prev*0.045);
-  const next  = Math.max(200, prev+delta);
-  streams[i].cv    = next;
-  streams[i].maxCv = Math.max(streams[i].maxCv||next, next);
+/* ── API KEY ── */
+function toggleApiPanel() {
+  document.getElementById('apiPanelBody').classList.toggle('open');
 }
 
-function refreshAllCv() {
-  streams.forEach((_,i) => simulateCv(i));
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val) return;
+  apiKey = val;
+  localStorage.setItem('yt_api_key', apiKey);
+  document.getElementById('apiKeyInput').value = '';
+  updateApiStatus('ok');
+  fetchAllCv();
+}
+
+function clearApiKey() {
+  apiKey = '';
+  localStorage.removeItem('yt_api_key');
+  document.getElementById('apiKeyInput').value = '';
+  streams.forEach(s => s.cv = null);
+  updateApiStatus('none');
   renderCvSection();
   renderTotals();
+}
+
+function updateApiStatus(state) {
+  const el = document.getElementById('apiStatus');
+  el.className = 'api-status ' + state;
+  el.textContent = state === 'ok' ? 'CONNECTED' : state === 'err' ? 'ERROR' : 'NO KEY';
+}
+
+/* ── FETCH CV FROM YOUTUBE API ── */
+async function fetchAllCv() {
+  if (!apiKey) return;
+  const vids = streams.map(s => s.vid).filter(Boolean);
+  if (!vids.length) return;
+
+  try {
+    const ids = vids.join(',');
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${ids}&key=${apiKey}`
+    );
+    if (!res.ok) {
+      if (res.status === 400 || res.status === 403) updateApiStatus('err');
+      return;
+    }
+    const data = await res.json();
+    updateApiStatus('ok');
+
+    // Map video id → concurrentViewers
+    const cvMap = {};
+    (data.items || []).forEach(item => {
+      const cv = item.liveStreamingDetails?.concurrentViewers;
+      cvMap[item.id] = cv ? parseInt(cv) : null;
+    });
+
+    streams.forEach(s => {
+      if (!s.vid) return;
+      const cv = cvMap[s.vid];
+      s.cv    = cv;
+      s.maxCv = Math.max(s.maxCv || 0, cv || 0);
+    });
+
+    renderCvSection();
+    renderTotals();
+  } catch(e) {
+    updateApiStatus('err');
+  }
 }
 
 /* ── RENDER CV ── */
@@ -390,7 +491,7 @@ function renderCvSection() {
   const n   = streams.length;
   sec.style.gridTemplateColumns = n <= 3 ? `repeat(${n},1fr)` : n <= 6 ? `repeat(3,1fr)` : `repeat(4,1fr)`;
   sec.innerHTML = '';
-  streams.forEach((s,i) => {
+  streams.forEach((s, i) => {
     const col = COLORS[i % COLORS.length];
     const pct = s.maxCv > 0 ? Math.min(100, Math.round((s.cv||0)/s.maxCv*100)) : 0;
     const d   = document.createElement('div');
@@ -398,7 +499,7 @@ function renderCvSection() {
     d.innerHTML = `
       <div class="cv-top">
         <span class="cv-region">${s.label||'Scene '+(i+1)}</span>
-        <span class="dot" style="background:${col};animation:blink 1.3s infinite;"></span>
+        <span class="dot" style="background:${col}"></span>
       </div>
       <div class="cv-num" style="color:${col}">${fmtNum(s.cv)}</div>
       <div class="cv-label">concurrent viewers</div>
@@ -410,22 +511,22 @@ function renderCvSection() {
 }
 
 function renderTotals() {
-  const total = streams.reduce((a,s)=>a+(s.cv||0),0);
-  document.getElementById('totalNum').textContent = fmtNum(total);
+  const total = streams.reduce((a,s) => a + (s.cv||0), 0);
+  document.getElementById('totalNum').textContent = total > 0 ? fmtNum(total) : '—';
 }
 
 /* ── RENDER PLAYERS ── */
 function renderPlayers() {
   const grid = document.getElementById('playerGrid');
   const cols = colsForCount(streams.length);
-  grid.className = layoutMode === 'sbs' ? 'player-grid sbs' : 'player-grid cols-'+cols;
+  grid.className = layoutMode === 'sbs' ? 'player-grid sbs' : 'player-grid cols-' + cols;
   if (layoutMode === 'sbs') {
-    const perRow = Math.min(streams.length, 4);
-    grid.style.gridTemplateColumns = 'repeat('+perRow+', minmax(0, 1fr))';
+    grid.style.gridTemplateColumns = 'repeat(' + Math.min(streams.length,4) + ', minmax(0,1fr))';
   } else {
     grid.style.gridTemplateColumns = '';
   }
   grid.innerHTML = '';
+  document.getElementById('streamCount').textContent = streams.length;
 
   if (streams.length === 0) {
     const e = document.createElement('div');
@@ -436,26 +537,26 @@ function renderPlayers() {
     return;
   }
 
-  streams.forEach((s,i) => {
-    const col = COLORS[i % COLORS.length];
+  streams.forEach((s, i) => {
     const src = s.vid
       ? `https://www.youtube.com/embed/${s.vid}?autoplay=1&${s.muted?'mute=1':''}&rel=0&modestbranding=1`
       : '';
-
     const card = document.createElement('div');
-    card.className = 'player-card'+(activeIdx===i?' active':'');
-    card.onclick = () => { activeIdx=i; document.querySelectorAll('.player-card').forEach((c,j)=>c.classList.toggle('active',j===i)); };
-
+    card.className = 'player-card' + (activeIdx === i ? ' active' : '');
+    card.onclick = () => {
+      activeIdx = i;
+      document.querySelectorAll('.player-card').forEach((c,j) => c.classList.toggle('active', j===i));
+    };
     card.innerHTML = `
       <div class="player-head">
         <div class="player-meta">
-          <span class="player-tag" style="color:${col}60">SCENE ${String(i+1).padStart(2,'0')}</span>
+          <span class="player-tag">SCENE ${String(i+1).padStart(2,'0')}</span>
           <span class="player-name">${s.label||'Stream '+(i+1)}</span>
         </div>
         <div class="player-head-right">
-          ${src?'<span class="live-badge">LIVE</span>':''}
+          ${src ? '<span class="live-badge">LIVE</span>' : ''}
           <span class="scene-num">${String(i+1).padStart(2,'0')}</span>
-          <button class="del-btn" onclick="event.stopPropagation();removeStream(${i})" title="Remove stream">✕</button>
+          <button class="del-btn" onclick="event.stopPropagation();removeStream(${i})">✕</button>
         </div>
       </div>
       <div class="video-wrap">
@@ -464,8 +565,7 @@ function renderPlayers() {
           : `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();focusFootUrl(${i})">
                <div style="width:36px;height:36px;border:1px solid #1e1e3a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#2a2a4a;font-size:14px;">▶</div>
                <div style="font-size:8px;color:#2a2a3a;letter-spacing:2px;text-transform:uppercase;">Paste URL below</div>
-             </div>`
-        }
+             </div>`}
       </div>
       <div class="player-foot">
         <input class="foot-url" id="foot-${i}" value="${s.url||''}" placeholder="youtube.com/watch?v=..."
@@ -473,10 +573,10 @@ function renderPlayers() {
           onkeydown="if(event.key==='Enter'){event.stopPropagation();loadFootUrl(${i})}">
         <button class="foot-btn ${s.muted?'muted':''}" onclick="event.stopPropagation();toggleMute(${i})">${s.muted?'MUTED':'SOUND'}</button>
         <button class="foot-btn" onclick="event.stopPropagation();loadFootUrl(${i})">LOAD ▶</button>
-      </div>
-    `;
+      </div>`;
     grid.appendChild(card);
   });
+  if (document.body.classList.contains('fs-mode')) applyFsLayout();
 }
 
 /* ── STREAM ACTIONS ── */
@@ -497,15 +597,14 @@ function loadFootUrl(i) {
   const inp = document.getElementById(`foot-${i}`);
   if (!inp) return;
   const url = inp.value.trim();
-  const vid = extractVid(url);
   streams[i].url   = url;
-  streams[i].vid   = vid;
+  streams[i].vid   = extractVid(url);
   streams[i].label = autoLabel(url, i);
   streams[i].cv    = null;
   urlRows[i]       = url;
-  simulateCv(i);
   renderAll();
   renderUrlPanel();
+  if (apiKey) fetchAllCv();
 }
 
 function focusFootUrl(i) {
@@ -524,58 +623,38 @@ function renderUrlPanel() {
       <span class="url-num">${i+1}.</span>
       <input class="url-inp" id="urlrow-${i}" value="${url||''}" placeholder="https://youtube.com/watch?v=..."
         onkeydown="if(event.key==='Enter')applyUrls()">
-      <button class="url-del" onclick="removeUrlRow(${i})">✕</button>
-    `;
+      <button class="url-del" onclick="removeUrlRow(${i})">✕</button>`;
     list.appendChild(row);
   });
-  const note = document.getElementById('urlCountNote');
-  if (note) note.textContent = urlRows.length+' / 8 streams';
+  document.getElementById('urlCountNote').textContent = urlRows.length + ' / 8 streams';
 }
 
 function addUrlRow() {
   if (urlRows.length >= 8) return;
   urlRows.push('');
   renderUrlPanel();
-  setTimeout(() => {
-    const inp = document.getElementById('urlrow-'+(urlRows.length-1));
-    if (inp) inp.focus();
-  }, 50);
+  setTimeout(() => { document.getElementById('urlrow-'+(urlRows.length-1))?.focus(); }, 50);
 }
 
-function removeUrlRow(i) {
-  urlRows.splice(i,1);
-  renderUrlPanel();
-}
+function removeUrlRow(i) { urlRows.splice(i,1); renderUrlPanel(); }
 
 function applyUrls() {
-  const inputs = document.querySelectorAll('[id^="urlrow-"]');
   urlRows = [];
-  inputs.forEach(inp => { if (inp.value.trim()) urlRows.push(inp.value.trim()); });
-
-  streams = urlRows.map((url,i) => {
-    const vid   = extractVid(url);
-    const prev  = streams[i] || {};
-    return {
-      url,
-      vid,
-      label: prev.label || autoLabel(url,i),
-      muted: prev.muted || false,
-      cv:    prev.cv    || null,
-      maxCv: prev.maxCv || CV_BASES[i]||5000,
-    };
+  document.querySelectorAll('[id^="urlrow-"]').forEach(inp => { if (inp.value.trim()) urlRows.push(inp.value.trim()); });
+  streams = urlRows.map((url, i) => {
+    const prev = streams[i] || {};
+    return { url, vid: extractVid(url), label: prev.label||autoLabel(url,i), muted: prev.muted||false, cv: null, maxCv: 0 };
   });
-
-  streams.forEach((_,i) => { if (!streams[i].cv) simulateCv(i); });
   renderAll();
   renderUrlPanel();
+  if (apiKey) fetchAllCv();
 }
 
 function togglePanel() {
-  const body    = document.getElementById('panelBody');
-  const toggle  = document.getElementById('panelToggle');
-  const isOpen  = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  toggle.classList.toggle('open', !isOpen);
+  const body = document.getElementById('panelBody');
+  const tog  = document.getElementById('panelToggle');
+  body.classList.toggle('open');
+  tog.classList.toggle('open', body.classList.contains('open'));
 }
 
 /* ── LAYOUT ── */
@@ -586,132 +665,104 @@ function setLayout(mode, btn) {
   renderPlayers();
 }
 
-/* ── COUNTDOWN ── */
-function updateCountdown() {
-  const pct  = (countdown/REFRESH_INTERVAL)*100;
-  const fill = document.getElementById('countdownFill');
-  const note = document.getElementById('countdownNote');
-  if (fill) fill.style.width = pct+'%';
-  if (note) note.textContent = countdown <= 0 ? 'Updating...' : 'Next update in '+countdown+'s';
-}
-
-function manualRefresh() {
-  countdown = REFRESH_INTERVAL;
-  updateCountdown();
-  refreshAllCv();
-}
-
-/* ── MASTER TICK ── */
-function tick() {
-  const n = new Date();
-  document.getElementById('clock').textContent =
-    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-  countdown--;
-  updateCountdown();
-  if (countdown <= 0) {
-    refreshAllCv();
-    countdown = REFRESH_INTERVAL;
-  }
-}
-
-
-function toggleFs() {
-  const isFs = document.body.classList.toggle('fs-mode');
-  document.getElementById('fs-btn').textContent = isFs ? '✕ Exit' : '⛶ View';
-  if (isFs) {
-    // recalc layout for fs: set flex-basis per count
-    applyFsLayout();
-  }
-}
-
-function applyFsLayout() {
-  const n = streams.length;
-  const cards = document.querySelectorAll('.player-card');
-  const grid  = document.getElementById('playerGrid');
-  if (!document.body.classList.contains('fs-mode')) return;
-  // rows: 1 row if <=4, 2 rows if 5-8
-  const rows = n <= 4 ? 1 : 2;
-  const perRow = Math.ceil(n / rows);
-  const basisPct = (100 / perRow).toFixed(4);
-  cards.forEach(c => {
-    c.style.flexBasis = 'calc(' + basisPct + '% - 3px)';
-    c.style.maxWidth  = 'calc(' + basisPct + '% - 3px)';
-  });
-}
-
-function openAll() {
-  streams.forEach(s => { if (s.url) window.open(s.url,'_blank'); });
-}
-
-let allMuted = false;
-let stopped  = false;
-
+/* ── CONTROLS ── */
 function stopAll() {
   stopped = !stopped;
   const btn = document.getElementById('btnStop');
   if (stopped) {
-    // Remove all iframes to stop playback
     document.querySelectorAll('.video-wrap iframe').forEach(f => f.remove());
     btn.classList.add('active');
-    btn.querySelector('.ctrl-dot').style.background = '#ff4444';
   } else {
-    // Re-render to restore iframes
-    stopped = false;
     btn.classList.remove('active');
     renderPlayers();
   }
 }
 
 function syncAll() {
-  // Force reload each iframe src to jump to live edge
   const btn = document.getElementById('btnSync');
-  btn.style.opacity = '0.5';
-  btn.style.pointerEvents = 'none';
+  btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none';
   document.querySelectorAll('.video-wrap iframe').forEach(f => {
-    const src = f.src;
-    f.src = '';
+    const src = f.src; f.src = '';
     setTimeout(() => { f.src = src; }, 80);
   });
-  // Re-enable after 2s
-  setTimeout(() => {
-    btn.style.opacity = '';
-    btn.style.pointerEvents = '';
-  }, 2000);
+  setTimeout(() => { btn.style.opacity = ''; btn.style.pointerEvents = ''; }, 2000);
 }
 
 function toggleMuteAll() {
   allMuted = !allMuted;
   streams.forEach(s => s.muted = allMuted);
-  const btn   = document.getElementById('btnMuteAll');
-  const icon  = document.getElementById('muteIcon');
-  const label = document.getElementById('muteLabel');
-  if (allMuted) {
-    btn.classList.add('active');
-    icon.textContent  = '🔈';
-    label.textContent = 'Unmute all';
-  } else {
-    btn.classList.remove('active');
-    icon.textContent  = '🔇';
-    label.textContent = 'Mute all';
-  }
+  document.getElementById('btnMuteAll').classList.toggle('active', allMuted);
+  document.getElementById('muteIcon').textContent  = allMuted ? '🔈' : '🔇';
+  document.getElementById('muteLabel').textContent = allMuted ? 'Unmute all' : 'Mute all';
   renderPlayers();
 }
 
+/* ── COUNTDOWN ── */
+function updateCountdown() {
+  const pct = (countdown / REFRESH_INTERVAL) * 100;
+  document.getElementById('countdownFill').style.width = pct + '%';
+  document.getElementById('countdownNote').textContent =
+    apiKey
+      ? (countdown <= 0 ? 'Updating...' : 'Next update in ' + countdown + 's')
+      : 'Add API key to enable';
+}
+
+function manualRefresh() {
+  countdown = REFRESH_INTERVAL;
+  updateCountdown();
+  if (apiKey) fetchAllCv();
+}
+
+/* ── FULLSCREEN ── */
+function toggleFs() {
+  const isFs = document.body.classList.toggle('fs-mode');
+  document.getElementById('fs-btn').textContent = isFs ? '✕ Exit' : '⛶ View';
+  if (isFs) applyFsLayout();
+}
+
+function applyFsLayout() {
+  const n = streams.length;
+  const perRow = Math.ceil(n / (n <= 4 ? 1 : 2));
+  const pct = (100 / perRow).toFixed(4);
+  document.querySelectorAll('.player-card').forEach(c => {
+    c.style.flexBasis = 'calc(' + pct + '% - 3px)';
+    c.style.maxWidth  = 'calc(' + pct + '% - 3px)';
+  });
+}
+
+function openAll() { streams.forEach(s => { if (s.url) window.open(s.url, '_blank'); }); }
+
+/* ── RENDER ALL ── */
 function renderAll() {
   renderCvSection();
   renderTotals();
   renderPlayers();
-  if (document.body.classList.contains('fs-mode')) applyFsLayout();
+}
+
+/* ── MASTER TICK ── */
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(), n.getMinutes(), n.getSeconds()].map(x => String(x).padStart(2,'0')).join(':');
+  countdown--;
+  updateCountdown();
+  if (countdown <= 0) {
+    if (apiKey) fetchAllCv();
+    countdown = REFRESH_INTERVAL;
+  }
 }
 
 /* ── INIT ── */
-streams.forEach((_,i) => simulateCv(i));
+if (apiKey) {
+  updateApiStatus('ok');
+  // Show masked key hint
+  document.getElementById('apiKeyInput').placeholder = 'Key saved — paste new key to replace';
+}
 renderAll();
 renderUrlPanel();
-document.querySelector('.lay-btn').classList.add('active');
+if (apiKey) fetchAllCv();
 setInterval(tick, 1000);
+tick();
 </script>
-
-<button id="fs-btn" onclick="toggleFs()">⛶ View</button>
 </body>
 </html>
