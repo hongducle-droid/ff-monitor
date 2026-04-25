@@ -6,368 +6,550 @@
 <title>FF Esports — Live Monitor</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #08080f;
-    color: #e0e0e8;
-    font-family: 'Courier New', monospace;
-    min-height: 100vh;
-    padding: 14px;
-  }
+  body { background: #08080f; color: #e0e0e8; font-family: 'Courier New', monospace; min-height: 100vh; padding: 12px; }
 
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 14px; background: #10101a;
-    border: 0.5px solid #22223a; border-radius: 6px; margin-bottom: 10px;
+    padding: 8px 14px; background: #10101a; border: 0.5px solid #22223a;
+    border-radius: 6px; margin-bottom: 10px;
   }
   .logo { font-size: 11px; letter-spacing: 3px; color: #ff4444; font-weight: bold; }
-  .topbar-right { display: flex; gap: 16px; align-items: center; }
+  .topbar-right { display: flex; gap: 14px; align-items: center; }
   .clock { font-size: 12px; color: #ff4444; letter-spacing: 2px; }
-  .status-pill { font-size: 9px; letter-spacing: 1.5px; color: #666; display: flex; align-items: center; gap: 5px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4444; animation: blink 1.3s infinite; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4444; display: inline-block; animation: blink 1.3s infinite; }
   .dot.green { background: #22cc66; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+  .pill { font-size: 9px; letter-spacing: 1.5px; color: #555; display: flex; align-items: center; gap: 5px; }
 
   /* CV BAR */
-  .cv-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .cv-section { display: grid; gap: 8px; margin-bottom: 10px; }
   .cv-card {
-    background: #0e0e1a; border: 0.5px solid #1c1c2e;
-    border-radius: 6px; padding: 9px 13px;
-    display: flex; flex-direction: column; gap: 3px;
-    transition: border-color 0.2s; cursor: pointer;
+    background: #0e0e1a; border: 0.5px solid #1c1c2e; border-radius: 6px;
+    padding: 8px 12px; display: flex; flex-direction: column; gap: 3px;
   }
-  .cv-card:hover { border-color: #2e2e4e; }
-  .cv-card.active { border-color: #ff4444; }
   .cv-top { display: flex; align-items: center; justify-content: space-between; }
   .cv-region { font-size: 8px; letter-spacing: 2px; color: #444; text-transform: uppercase; }
-  .cv-num { font-size: 24px; font-weight: bold; letter-spacing: 1px; line-height: 1.1; }
-  .cv-label { font-size: 8px; color: #333; letter-spacing: 1.5px; text-transform: uppercase; }
-  .cv-sub { font-size: 8px; color: #2a2a4a; margin-top: 1px; }
-  .cv-track { height: 2px; background: #1a1a2a; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+  .cv-num { font-size: 20px; font-weight: bold; letter-spacing: 1px; line-height: 1.1; }
+  .cv-label { font-size: 7px; color: #333; letter-spacing: 1.5px; text-transform: uppercase; }
+  .cv-track { height: 2px; background: #1a1a2a; border-radius: 2px; margin-top: 4px; overflow: hidden; }
   .cv-fill { height: 2px; border-radius: 2px; transition: width 1s ease; }
 
-  .total-card {
-    background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 6px;
-    padding: 8px 13px; margin-bottom: 10px;
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  .total-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; background: #0e0e1a; border: 0.5px solid #22223a;
+    border-radius: 6px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
   }
-  .total-label { font-size: 8px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
-  .total-num { font-size: 15px; color: #eee; letter-spacing: 2px; font-weight: bold; }
-  .total-note { font-size: 8px; color: #2a2a4a; }
+  .total-left { display: flex; flex-direction: column; gap: 2px; }
+  .total-label { font-size: 8px; color: #333; letter-spacing: 2px; text-transform: uppercase; }
+  .total-num { font-size: 22px; font-weight: bold; color: #ff4444; letter-spacing: 2px; line-height: 1; }
+  .total-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .countdown-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; }
+  .countdown-track { width: 140px; height: 2px; background: #1a1a2a; border-radius: 2px; overflow: hidden; }
+  .countdown-fill { height: 2px; background: #ff4444; border-radius: 2px; transition: width 1s linear; }
+  .refresh-btn {
+    padding: 3px 10px; background: transparent; border: 0.5px solid #22223a; border-radius: 3px;
+    color: #444; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s;
+  }
+  .refresh-btn:hover { border-color: #ff4444; color: #ff4444; }
+
+  /* URL INPUT PANEL */
+  .url-panel {
+    background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 6px;
+    margin-bottom: 10px; overflow: hidden;
+  }
+  .url-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: 0.5px solid #1a1a2a; cursor: pointer;
+    user-select: none;
+  }
+  .url-panel-title { font-size: 9px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+  .url-panel-toggle { font-size: 10px; color: #333; transition: transform 0.2s; }
+  .url-panel-toggle.open { transform: rotate(180deg); }
+  .url-panel-body { padding: 10px 12px; display: none; }
+  .url-panel-body.open { display: block; }
+
+  .url-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .url-row { display: flex; gap: 6px; align-items: center; }
+  .url-num { font-size: 9px; color: #2a2a4a; min-width: 18px; text-align: right; }
+  .url-inp {
+    flex: 1; background: #0c0c18; border: 0.5px solid #1c1c2e; border-radius: 4px;
+    padding: 5px 9px; color: #777; font-size: 9px; font-family: 'Courier New', monospace;
+    outline: none; transition: border-color 0.2s; min-width: 0;
+  }
+  .url-inp:focus { border-color: #2e2e4e; color: #bbb; }
+  .url-inp::placeholder { color: #1a1a2a; }
+  .url-del {
+    padding: 4px 8px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
+    color: #333; font-size: 9px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1px; transition: all 0.13s; flex-shrink: 0;
+  }
+  .url-del:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
+
+  .url-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .url-add-btn {
+    padding: 5px 12px; background: #10101a; border: 0.5px solid #22223a; border-radius: 4px;
+    color: #666; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s;
+  }
+  .url-add-btn:hover { border-color: #ff4444; color: #ff4444; }
+  .url-apply-btn {
+    padding: 5px 14px; background: #ff4444; border: none; border-radius: 4px;
+    color: #fff; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px; text-transform: uppercase; transition: all 0.13s;
+  }
+  .url-apply-btn:hover { background: #cc3333; }
+  .url-count-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; margin-left: auto; }
 
   /* LAYOUT CONTROLS */
   .layout-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .lay-label { font-size: 9px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
   .lay-btn {
-    padding: 5px 13px; background: #10101a; border: 0.5px solid #22223a;
-    border-radius: 4px; color: #666; font-size: 9px; cursor: pointer;
-    font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase;
-    transition: all 0.13s;
+    padding: 4px 11px; background: #10101a; border: 0.5px solid #22223a; border-radius: 4px;
+    color: #666; font-size: 9px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s;
   }
   .lay-btn:hover { border-color: #ff4444; color: #ff4444; }
   .lay-btn.active { background: #ff4444; border-color: #ff4444; color: #fff; }
 
-  /* SCENE GRID */
-  .grid { display: grid; gap: 9px; }
-  .grid.l-1x3 { grid-template-columns: 1fr 1fr 1fr; }
-  .grid.l-2x2 { grid-template-columns: 1fr 1fr; }
-  .grid.l-focus { grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; }
-  .grid.l-full { grid-template-columns: 1fr; }
+  /* PLAYER GRID */
+  .player-grid { display: grid; gap: 8px; }
+  .player-grid.cols-1 { grid-template-columns: 1fr; }
+  .player-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .player-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .player-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
-  .card {
-    background: #0c0c16; border: 0.5px solid #1c1c2e;
-    border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;
-    transition: border-color 0.2s; cursor: pointer;
+  .player-card {
+    background: #0c0c16; border: 0.5px solid #1c1c2e; border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s;
   }
-  .card:hover { border-color: #2e2e4e; }
-  .card.active { border-color: #ff4444; box-shadow: 0 0 0 1px #ff444428; }
-  .card.focus-main { grid-row: span 2; }
+  .player-card:hover { border-color: #2e2e4e; }
+  .player-card.active { border-color: #ff4444; box-shadow: 0 0 0 1px #ff444420; }
 
-  .card-head {
+  .player-head {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 10px; background: #08080f; border-bottom: 0.5px solid #1a1a2c; flex-shrink: 0;
+    padding: 5px 9px; background: #08080f; border-bottom: 0.5px solid #1a1a2c; flex-shrink: 0;
   }
-  .ch-tag { font-size: 8px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
-  .ch-name { font-size: 11px; color: #bbb; font-weight: bold; letter-spacing: 0.5px; }
-  .head-right { display: flex; align-items: center; gap: 6px; }
-  .live-tag { font-size: 8px; padding: 2px 7px; background: #ff4444; color: #fff; border-radius: 3px; letter-spacing: 1px; }
-  .scene-num { font-size: 9px; color: #2a2a4a; padding: 2px 6px; background: #0a0a12; border: 0.5px solid #1a1a2a; border-radius: 3px; }
+  .player-meta { display: flex; flex-direction: column; gap: 1px; }
+  .player-tag { font-size: 7px; color: #333; letter-spacing: 2px; text-transform: uppercase; }
+  .player-name { font-size: 10px; color: #aaa; font-weight: bold; letter-spacing: 0.5px; }
+  .player-head-right { display: flex; align-items: center; gap: 5px; }
+  .live-badge { font-size: 8px; padding: 2px 6px; background: #ff4444; color: #fff; border-radius: 3px; letter-spacing: 1px; }
+  .scene-num { font-size: 9px; color: #1e1e3a; padding: 2px 5px; background: #0a0a12; border: 0.5px solid #1a1a2a; border-radius: 3px; }
+  .del-btn {
+    padding: 2px 6px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
+    color: #2a2a4a; font-size: 9px; cursor: pointer; font-family: 'Courier New', monospace;
+    transition: all 0.13s; line-height: 1;
+  }
+  .del-btn:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
 
   .video-wrap { position: relative; background: #050508; aspect-ratio: 16/9; flex: 1; }
   .video-wrap iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
-  .placeholder {
-    position: absolute; top:0; left:0; width:100%; height:100%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  }
-  .ph-ring {
-    width: 38px; height: 38px; border: 1px solid #1e1e3a; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; color: #2a2a4a; font-size: 15px; transition: all 0.2s;
-  }
-  .placeholder:hover .ph-ring { border-color: #ff4444; color: #ff4444; }
-  .ph-txt { font-size: 8px; color: #2a2a3a; letter-spacing: 2px; text-transform: uppercase; }
 
-  .card-foot {
+  .player-foot {
     display: flex; align-items: center; gap: 5px;
-    padding: 6px 9px; background: #08080f; border-top: 0.5px solid #1a1a2c; flex-shrink: 0;
+    padding: 5px 8px; background: #08080f; border-top: 0.5px solid #1a1a2c; flex-shrink: 0;
   }
-  .url-inp {
+  .foot-url {
     flex: 1; background: #0c0c16; border: 0.5px solid #1c1c2e; border-radius: 3px;
-    padding: 4px 8px; color: #777; font-size: 9px; font-family: 'Courier New', monospace;
+    padding: 3px 7px; color: #555; font-size: 8px; font-family: 'Courier New', monospace;
     outline: none; transition: border-color 0.2s; min-width: 0;
   }
-  .url-inp:focus { border-color: #2e2e4e; color: #bbb; }
-  .url-inp::placeholder { color: #1e1e2e; }
+  .foot-url:focus { border-color: #2e2e4e; color: #bbb; }
+  .foot-url::placeholder { color: #1a1a2a; }
   .foot-btn {
-    padding: 4px 9px; background: #10101a; border: 0.5px solid #22223a; border-radius: 3px;
-    color: #666; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    padding: 3px 7px; background: #10101a; border: 0.5px solid #22223a; border-radius: 3px;
+    color: #555; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
     letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s; white-space: nowrap; flex-shrink: 0;
   }
   .foot-btn:hover { border-color: #ff4444; color: #ff4444; }
   .foot-btn.muted { border-color: #ff4444; color: #ff4444; }
 
-  .bottom {
-    display: flex; gap: 6px; margin-top: 10px; padding: 8px 12px;
-    background: #10101a; border: 0.5px solid #22223a; border-radius: 6px;
-    align-items: center; flex-wrap: wrap;
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    border: 0.5px dashed #1c1c2e; border-radius: 6px; color: #2a2a4a;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: border-color 0.2s;
   }
-  .bottom-label { font-size: 8px; color: #333; letter-spacing: 2px; text-transform: uppercase; margin-right: 2px; }
-  .preset-btn {
-    padding: 4px 11px; background: #0c0c16; border: 0.5px solid #1c1c2e; border-radius: 3px;
-    color: #555; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
-    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s; white-space: nowrap;
-  }
-  .preset-btn:hover { border-color: #555; color: #aaa; }
-  .preset-btn.ff { border-color: #332200; color: #aa6600; }
-  .preset-btn.ff:hover { border-color: #aa6600; color: #ddaa44; }
-  .preset-btn.aov { border-color: #223366; color: #4466aa; }
-  .preset-btn.aov:hover { border-color: #4466aa; color: #88aadd; }
+  .empty-state:hover { border-color: #3a3a5a; color: #4a4a6a; }
 
-  .footer-note {
-    text-align: center; margin-top: 12px;
-    font-size: 8px; color: #1e1e2e; letter-spacing: 1px;
+  .footer-bar {
+    margin-top: 10px; padding: 7px 12px; background: #0a0a12;
+    border: 0.5px solid #16162a; border-radius: 6px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;
   }
+  .footer-note { font-size: 8px; color: #1a1a2a; letter-spacing: 1px; }
+  .open-all-btn {
+    padding: 4px 11px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
+    color: #333; font-size: 8px; cursor: pointer; font-family: 'Courier New', monospace;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s;
+  }
+  .open-all-btn:hover { border-color: #555; color: #888; }
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">⬛ FF ESPORTS — LIVE MONITOR</div>
   <div class="topbar-right">
-    <span class="status-pill"><span class="dot"></span>3 STREAMS LIVE</span>
-    <span class="status-pill" style="color:#444;">GARENA PRODUCTION</span>
+    <span class="pill"><span class="dot"></span><span id="streamCount">3</span> STREAMS</span>
+    <span class="pill" style="color:#333;">GARENA PRODUCTION</span>
     <span class="clock" id="clock">00:00:00</span>
   </div>
 </div>
 
 <!-- CV BAR -->
-<div class="cv-bar" id="cvBar"></div>
+<div class="cv-section" id="cvSection"></div>
 
-<div class="total-card">
-  <div>
-    <div class="total-label">Total Concurrent Viewers</div>
-    <div class="total-num" id="totalCv">—</div>
+<!-- TOTAL + COUNTDOWN -->
+<div class="total-bar">
+  <div class="total-left">
+    <span class="total-label">Total Concurrent Viewers</span>
+    <span class="total-num" id="totalNum">—</span>
   </div>
-  <div style="text-align:right">
-    <div class="total-note" id="lastUpdate">Initializing...</div>
-    <div style="font-size:8px;color:#2a2a3a;letter-spacing:1px;margin-top:2px;">AUTO-REFRESH 30s</div>
-  </div>
-  <div style="display:flex;gap:5px;align-items:center;">
-    <div class="dot"></div>
-    <span style="font-size:8px;color:#444;letter-spacing:1px;">FFWS SEA · NP · INDIA</span>
+  <div class="total-right">
+    <span class="countdown-note" id="countdownNote">Next update in 30s</span>
+    <div class="countdown-track"><div class="countdown-fill" id="countdownFill" style="width:100%"></div></div>
+    <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh now</button>
   </div>
 </div>
 
-<!-- LAYOUT -->
+<!-- URL INPUT PANEL -->
+<div class="url-panel">
+  <div class="url-panel-head" onclick="togglePanel()">
+    <span class="url-panel-title">⚙ Manage streams</span>
+    <span class="url-panel-toggle open" id="panelToggle">▼</span>
+  </div>
+  <div class="url-panel-body open" id="panelBody">
+    <div class="url-list" id="urlList"></div>
+    <div class="url-actions">
+      <button class="url-add-btn" onclick="addUrlRow()">+ Add stream</button>
+      <button class="url-apply-btn" onclick="applyUrls()">Apply ▶</button>
+      <span class="url-count-note" id="urlCountNote">3 / 8 streams</span>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT TOGGLE -->
 <div class="layout-row">
   <span class="lay-label">Layout:</span>
-  <button class="lay-btn" onclick="setLayout('l-full',this)">Full</button>
-  <button class="lay-btn active" onclick="setLayout('l-1x3',this)">1 × 3</button>
-  <button class="lay-btn" onclick="setLayout('l-2x2',this)">2 × 2</button>
-  <button class="lay-btn" onclick="setLayout('l-focus',this)">Focus</button>
+  <button class="lay-btn" onclick="setLayout('auto',this)">Auto</button>
+  <button class="lay-btn" onclick="setLayout('1',this)">1</button>
+  <button class="lay-btn" onclick="setLayout('2',this)">2</button>
+  <button class="lay-btn" onclick="setLayout('3',this)">3</button>
+  <button class="lay-btn" onclick="setLayout('4',this)">4</button>
 </div>
 
-<div class="grid l-1x3" id="grid"></div>
+<!-- PLAYER GRID -->
+<div class="player-grid cols-3" id="playerGrid"></div>
 
-<!-- QUICK PRESETS -->
-<div class="bottom">
-  <span class="bottom-label">Quick load:</span>
-  <button class="preset-btn ff" onclick="quickLoad(0,'https://www.youtube.com/watch?v=_ONQTKGn6n0','_ONQTKGn6n0')">FFWS SEA</button>
-  <button class="preset-btn ff" onclick="quickLoad(1,'https://www.youtube.com/watch?v=AGEAsXrkm4E','AGEAsXrkm4E')">FFWS NP</button>
-  <button class="preset-btn ff" onclick="quickLoad(2,'https://www.youtube.com/watch?v=FSfGprpeeXU','FSfGprpeeXU')">FFWS INDIA</button>
-  <button class="preset-btn ff" onclick="quickLoad(0,'https://www.youtube.com/channel/UCKgALVAg70mbC4SwhkyhvRw','')">FF Esports VN</button>
-  <button class="preset-btn aov" onclick="quickLoad(0,'https://www.youtube.com/channel/UCpnQwjzvDm1MOMtZV2zkVpA','')">ĐTDV LQ</button>
+<!-- FOOTER -->
+<div class="footer-bar">
+  <span class="footer-note">HOST ON HTTPS TO ENABLE YOUTUBE EMBED · MAX 8 STREAMS</span>
+  <button class="open-all-btn" onclick="openAll()">↗ Open all in YouTube</button>
 </div>
-
-<div class="footer-note">GARENA ESPORTS PRODUCTION TOOL — PASTE ANY YOUTUBE URL TO LOAD A SCENE</div>
 
 <script>
-const STREAMS = [
-  { tag: 'FF ESPORTS — SEA', name: 'FFWS SEA 2026 SPRING', url: 'https://www.youtube.com/watch?v=_ONQTKGn6n0', vid: '_ONQTKGn6n0' },
-  { tag: 'FF ESPORTS — NP',  name: 'FFWS NP 2026',         url: 'https://www.youtube.com/watch?v=AGEAsXrkm4E', vid: 'AGEAsXrkm4E' },
-  { tag: 'FF ESPORTS — IND', name: 'FFWS INDIA 2026',      url: 'https://www.youtube.com/watch?v=FSfGprpeeXU', vid: 'FSfGprpeeXU' },
+const COLORS = ['#ff4444','#22cc66','#4488ff','#ffaa00','#cc44ff','#00cccc','#ff6688','#88ff44'];
+const CV_BASES = [18000,9000,12000,7000,5000,6000,4000,8000];
+const REFRESH_INTERVAL = 30;
+
+const DEFAULT_STREAMS = [
+  { label:'FFWS SEA 2026', url:'https://www.youtube.com/watch?v=_ONQTKGn6n0', vid:'_ONQTKGn6n0' },
+  { label:'FFWS NP 2026',  url:'https://www.youtube.com/watch?v=AGEAsXrkm4E', vid:'AGEAsXrkm4E' },
+  { label:'FFWS INDIA 2026', url:'https://www.youtube.com/watch?v=FSfGprpeeXU', vid:'FSfGprpeeXU' },
 ];
 
-const CV_COLORS = ['#ff4444', '#22cc66', '#4488ff'];
-const CV_BASES  = [18000, 9000, 12000];
+let streams = DEFAULT_STREAMS.map((s,i) => ({ ...s, muted: false, cv: null, maxCv: CV_BASES[i] }));
+let activeIdx = 0;
+let layoutMode = 'auto';
+let countdown = REFRESH_INTERVAL;
+let urlRows = DEFAULT_STREAMS.map(s => s.url);
 
-const state = {
-  urls:   STREAMS.map(s => s.url),
-  vids:   STREAMS.map(s => s.vid),
-  muted:  [false, false, false],
-  active: 0,
-  layout: 'l-1x3',
-  cv:     [null, null, null],
-  maxCv:  [...CV_BASES],
-};
+/* ── HELPERS ── */
+function extractVid(url) {
+  if (!url) return '';
+  const m = url.match(/(?:[?&]v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
 
 function fmtNum(n) {
-  if (n === null || n === undefined) return '—';
-  if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
-  if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
+  if (!n) return '—';
+  if (n >= 1000000) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1000)    return (n/1000).toFixed(1)+'K';
   return n.toLocaleString();
 }
 
-function renderCvBar() {
-  const bar = document.getElementById('cvBar');
-  bar.innerHTML = '';
-  STREAMS.forEach((s, i) => {
-    const cv  = state.cv[i];
-    const pct = state.maxCv[i] > 0 ? Math.min(100, Math.round((cv || 0) / state.maxCv[i] * 100)) : 0;
-    const col = CV_COLORS[i];
-    const card = document.createElement('div');
-    card.className = 'cv-card' + (state.active === i ? ' active' : '');
-    card.onclick = () => { state.active = i; renderCvBar(); renderGrid(); };
-    card.innerHTML = `
-      <div class="cv-top">
-        <span class="cv-region">${s.tag.replace('FF ESPORTS — ','')}</span>
-        <span class="dot" style="background:${col}"></span>
-      </div>
-      <div class="cv-num" style="color:${col}">${fmtNum(cv)}</div>
-      <div class="cv-label">concurrent viewers</div>
-      <div class="cv-sub">${s.name}</div>
-      <div class="cv-track"><div class="cv-fill" style="width:${pct}%;background:${col}"></div></div>
-    `;
-    bar.appendChild(card);
-  });
-  const total = state.cv.reduce((a, v) => a + (v || 0), 0);
-  document.getElementById('totalCv').textContent = total > 0 ? fmtNum(total) : '—';
-  document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB');
+function autoLabel(url, idx) {
+  const vid = extractVid(url);
+  return vid ? 'SCENE ' + String(idx+1).padStart(2,'0') : 'STREAM '+(idx+1);
 }
 
+function colsForCount(n) {
+  if (layoutMode !== 'auto') return parseInt(layoutMode);
+  if (n === 1) return 1;
+  if (n <= 2)  return 2;
+  if (n <= 4)  return 2;
+  if (n <= 6)  return 3;
+  return 4;
+}
+
+/* ── CV SIMULATE ── */
 function simulateCv(i) {
-  const prev = state.cv[i] || CV_BASES[i];
-  const delta = Math.floor((Math.random() - 0.48) * prev * 0.04);
-  const next  = Math.max(100, prev + delta);
-  state.cv[i] = next;
-  state.maxCv[i] = Math.max(state.maxCv[i], next);
+  const prev = streams[i].cv || CV_BASES[i] || 5000;
+  const delta = Math.floor((Math.random()-0.47)*prev*0.045);
+  const next  = Math.max(200, prev+delta);
+  streams[i].cv    = next;
+  streams[i].maxCv = Math.max(streams[i].maxCv||next, next);
 }
 
 function refreshAllCv() {
-  [0, 1, 2].forEach(simulateCv);
-  renderCvBar();
+  streams.forEach((_,i) => simulateCv(i));
+  renderCvSection();
+  renderTotals();
 }
 
-function getEmbedSrc(vid, mute) {
-  if (!vid) return null;
-  return `https://www.youtube.com/embed/${vid}?autoplay=1&${mute ? 'mute=1' : ''}&rel=0&modestbranding=1`;
+/* ── RENDER CV ── */
+function renderCvSection() {
+  const sec = document.getElementById('cvSection');
+  const n   = streams.length;
+  sec.style.gridTemplateColumns = n <= 3 ? `repeat(${n},1fr)` : n <= 6 ? `repeat(3,1fr)` : `repeat(4,1fr)`;
+  sec.innerHTML = '';
+  streams.forEach((s,i) => {
+    const col = COLORS[i % COLORS.length];
+    const pct = s.maxCv > 0 ? Math.min(100, Math.round((s.cv||0)/s.maxCv*100)) : 0;
+    const d   = document.createElement('div');
+    d.className = 'cv-card';
+    d.innerHTML = `
+      <div class="cv-top">
+        <span class="cv-region">${s.label||'Scene '+(i+1)}</span>
+        <span class="dot" style="background:${col};animation:blink 1.3s infinite;"></span>
+      </div>
+      <div class="cv-num" style="color:${col}">${fmtNum(s.cv)}</div>
+      <div class="cv-label">concurrent viewers</div>
+      <div class="cv-track"><div class="cv-fill" style="width:${pct}%;background:${col}"></div></div>
+    `;
+    sec.appendChild(d);
+  });
+  document.getElementById('streamCount').textContent = n;
 }
 
-function renderGrid() {
-  const grid  = document.getElementById('grid');
-  grid.className = 'grid ' + state.layout;
-  const count = state.layout === 'l-full' ? 1 : 3;
+function renderTotals() {
+  const total = streams.reduce((a,s)=>a+(s.cv||0),0);
+  document.getElementById('totalNum').textContent = fmtNum(total);
+}
+
+/* ── RENDER PLAYERS ── */
+function renderPlayers() {
+  const grid = document.getElementById('playerGrid');
+  const cols = colsForCount(streams.length);
+  grid.className = 'player-grid cols-'+cols;
   grid.innerHTML = '';
 
-  for (let i = 0; i < count; i++) {
-    const s    = STREAMS[i];
-    const mute = state.muted[i];
-    const vid  = state.vids[i];
-    const src  = getEmbedSrc(vid, mute);
+  if (streams.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'empty-state';
+    e.textContent = '+ Add a stream URL above to get started';
+    e.onclick = () => { document.getElementById('panelBody').classList.add('open'); addUrlRow(); };
+    grid.appendChild(e);
+    return;
+  }
+
+  streams.forEach((s,i) => {
+    const col = COLORS[i % COLORS.length];
+    const src = s.vid
+      ? `https://www.youtube.com/embed/${s.vid}?autoplay=1&${s.muted?'mute=1':''}&rel=0&modestbranding=1`
+      : '';
 
     const card = document.createElement('div');
-    card.className = 'card' + (state.active === i ? ' active' : '') +
-                     (state.layout === 'l-focus' && i === 0 ? ' focus-main' : '');
-    card.addEventListener('click', () => { state.active = i; renderGrid(); renderCvBar(); });
+    card.className = 'player-card'+(activeIdx===i?' active':'');
+    card.onclick = () => { activeIdx=i; document.querySelectorAll('.player-card').forEach((c,j)=>c.classList.toggle('active',j===i)); };
 
     card.innerHTML = `
-      <div class="card-head">
-        <div>
-          <div class="ch-tag">${s.tag}</div>
-          <div class="ch-name">${s.name}</div>
+      <div class="player-head">
+        <div class="player-meta">
+          <span class="player-tag" style="color:${col}60">SCENE ${String(i+1).padStart(2,'0')}</span>
+          <span class="player-name">${s.label||'Stream '+(i+1)}</span>
         </div>
-        <div class="head-right">
-          ${src ? '<span class="live-tag">LIVE</span>' : ''}
-          <span class="scene-num">${String(i + 1).padStart(2, '0')}</span>
+        <div class="player-head-right">
+          ${src?'<span class="live-badge">LIVE</span>':''}
+          <span class="scene-num">${String(i+1).padStart(2,'0')}</span>
+          <button class="del-btn" onclick="event.stopPropagation();removeStream(${i})" title="Remove stream">✕</button>
         </div>
       </div>
       <div class="video-wrap">
         ${src
           ? `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
-          : `<div class="placeholder">
-               <div class="ph-ring">&#9654;</div>
-               <div class="ph-txt">Paste URL below</div>
-             </div>`}
+          : `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();focusFootUrl(${i})">
+               <div style="width:36px;height:36px;border:1px solid #1e1e3a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#2a2a4a;font-size:14px;">▶</div>
+               <div style="font-size:8px;color:#2a2a3a;letter-spacing:2px;text-transform:uppercase;">Paste URL below</div>
+             </div>`
+        }
       </div>
-      <div class="card-foot">
-        <input class="url-inp" id="inp-${i}" value="${state.urls[i]}"
-          placeholder="youtube.com/watch?v=..."
+      <div class="player-foot">
+        <input class="foot-url" id="foot-${i}" value="${s.url||''}" placeholder="youtube.com/watch?v=..."
           onclick="event.stopPropagation()"
-          onkeydown="if(event.key==='Enter'){event.stopPropagation();loadUrl(${i})}">
-        <button class="foot-btn ${mute ? 'muted' : ''}"
-          onclick="event.stopPropagation();toggleMute(${i})">${mute ? 'MUTED' : 'SOUND'}</button>
-        <button class="foot-btn"
-          onclick="event.stopPropagation();loadUrl(${i})">LOAD &#9654;</button>
+          onkeydown="if(event.key==='Enter'){event.stopPropagation();loadFootUrl(${i})}">
+        <button class="foot-btn ${s.muted?'muted':''}" onclick="event.stopPropagation();toggleMute(${i})">${s.muted?'MUTED':'SOUND'}</button>
+        <button class="foot-btn" onclick="event.stopPropagation();loadFootUrl(${i})">LOAD ▶</button>
       </div>
     `;
     grid.appendChild(card);
-  }
+  });
 }
 
-function loadUrl(i) {
-  const inp = document.getElementById(`inp-${i}`);
-  if (!inp) return;
-  const url = inp.value.trim();
-  state.urls[i] = url;
-  const m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  state.vids[i] = m ? m[1] : '';
-  state.cv[i]   = null;
-  renderGrid();
-  simulateCv(i);
-  renderCvBar();
-}
-
-function quickLoad(i, url, vid) {
-  state.urls[i] = url;
-  state.vids[i] = vid || (() => { const m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/); return m ? m[1] : ''; })();
-  state.cv[i]   = null;
-  renderGrid();
-  setTimeout(() => { const inp = document.getElementById(`inp-${i}`); if (inp) inp.value = url; }, 30);
-  simulateCv(i);
-  renderCvBar();
+/* ── STREAM ACTIONS ── */
+function removeStream(i) {
+  streams.splice(i,1);
+  urlRows.splice(i,1);
+  if (activeIdx >= streams.length) activeIdx = Math.max(0, streams.length-1);
+  renderAll();
+  renderUrlPanel();
 }
 
 function toggleMute(i) {
-  state.muted[i] = !state.muted[i];
-  renderGrid();
+  streams[i].muted = !streams[i].muted;
+  renderPlayers();
 }
 
-function setLayout(l, btn) {
-  state.layout = l;
+function loadFootUrl(i) {
+  const inp = document.getElementById(`foot-${i}`);
+  if (!inp) return;
+  const url = inp.value.trim();
+  const vid = extractVid(url);
+  streams[i].url   = url;
+  streams[i].vid   = vid;
+  streams[i].label = autoLabel(url, i);
+  streams[i].cv    = null;
+  urlRows[i]       = url;
+  simulateCv(i);
+  renderAll();
+  renderUrlPanel();
+}
+
+function focusFootUrl(i) {
+  const inp = document.getElementById(`foot-${i}`);
+  if (inp) inp.focus();
+}
+
+/* ── URL PANEL ── */
+function renderUrlPanel() {
+  const list = document.getElementById('urlList');
+  list.innerHTML = '';
+  urlRows.forEach((url, i) => {
+    const row = document.createElement('div');
+    row.className = 'url-row';
+    row.innerHTML = `
+      <span class="url-num">${i+1}.</span>
+      <input class="url-inp" id="urlrow-${i}" value="${url||''}" placeholder="https://youtube.com/watch?v=..."
+        onkeydown="if(event.key==='Enter')applyUrls()">
+      <button class="url-del" onclick="removeUrlRow(${i})">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  const note = document.getElementById('urlCountNote');
+  if (note) note.textContent = urlRows.length+' / 8 streams';
+}
+
+function addUrlRow() {
+  if (urlRows.length >= 8) return;
+  urlRows.push('');
+  renderUrlPanel();
+  setTimeout(() => {
+    const inp = document.getElementById('urlrow-'+(urlRows.length-1));
+    if (inp) inp.focus();
+  }, 50);
+}
+
+function removeUrlRow(i) {
+  urlRows.splice(i,1);
+  renderUrlPanel();
+}
+
+function applyUrls() {
+  const inputs = document.querySelectorAll('[id^="urlrow-"]');
+  urlRows = [];
+  inputs.forEach(inp => { if (inp.value.trim()) urlRows.push(inp.value.trim()); });
+
+  streams = urlRows.map((url,i) => {
+    const vid   = extractVid(url);
+    const prev  = streams[i] || {};
+    return {
+      url,
+      vid,
+      label: prev.label || autoLabel(url,i),
+      muted: prev.muted || false,
+      cv:    prev.cv    || null,
+      maxCv: prev.maxCv || CV_BASES[i]||5000,
+    };
+  });
+
+  streams.forEach((_,i) => { if (!streams[i].cv) simulateCv(i); });
+  renderAll();
+  renderUrlPanel();
+}
+
+function togglePanel() {
+  const body    = document.getElementById('panelBody');
+  const toggle  = document.getElementById('panelToggle');
+  const isOpen  = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+}
+
+/* ── LAYOUT ── */
+function setLayout(mode, btn) {
+  layoutMode = mode;
   document.querySelectorAll('.lay-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  renderGrid();
+  renderPlayers();
 }
 
+/* ── COUNTDOWN ── */
+function updateCountdown() {
+  const pct  = (countdown/REFRESH_INTERVAL)*100;
+  const fill = document.getElementById('countdownFill');
+  const note = document.getElementById('countdownNote');
+  if (fill) fill.style.width = pct+'%';
+  if (note) note.textContent = countdown <= 0 ? 'Updating...' : 'Next update in '+countdown+'s';
+}
+
+function manualRefresh() {
+  countdown = REFRESH_INTERVAL;
+  updateCountdown();
+  refreshAllCv();
+}
+
+/* ── MASTER TICK ── */
 function tick() {
   const n = new Date();
   document.getElementById('clock').textContent =
-    [n.getHours(), n.getMinutes(), n.getSeconds()].map(x => String(x).padStart(2, '0')).join(':');
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  countdown--;
+  updateCountdown();
+  if (countdown <= 0) {
+    refreshAllCv();
+    countdown = REFRESH_INTERVAL;
+  }
 }
 
+function openAll() {
+  streams.forEach(s => { if (s.url) window.open(s.url,'_blank'); });
+}
+
+function renderAll() {
+  renderCvSection();
+  renderTotals();
+  renderPlayers();
+}
+
+/* ── INIT ── */
+streams.forEach((_,i) => simulateCv(i));
+renderAll();
+renderUrlPanel();
+document.querySelector('.lay-btn').classList.add('active');
 setInterval(tick, 1000);
-setInterval(refreshAllCv, 30000);
-tick();
-renderGrid();
-refreshAllCv();
 </script>
 </body>
 </html>
