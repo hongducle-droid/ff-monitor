@@ -118,6 +118,7 @@
   .player-grid.cols-2 { grid-template-columns: 1fr 1fr; }
   .player-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
   .player-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .player-grid.sbs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
   .player-card {
     background: #0c0c16; border: 0.5px solid #1c1c2e; border-radius: 6px;
@@ -145,6 +146,62 @@
 
   .video-wrap { position: relative; background: #050508; aspect-ratio: 16/9; flex: 1; }
   .video-wrap iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
+
+  /* FULLSCREEN VIEW MODE */
+  body.fs-mode { padding: 0; overflow: hidden; }
+  body.fs-mode .topbar,
+  body.fs-mode .cv-section,
+  body.fs-mode .total-bar,
+  body.fs-mode .url-panel,
+
+  /* CONTROL BUTTONS */
+  .ctrl-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .ctrl-label { font-size: 9px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
+  .ctrl-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 13px; background: #10101a; border: 0.5px solid #22223a;
+    border-radius: 4px; color: #666; font-size: 9px; cursor: pointer;
+    font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover { border-color: #aaa; color: #aaa; }
+  .ctrl-btn.stop:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
+  .ctrl-btn.sync:hover { border-color: #22cc66; color: #22cc66; background: #081a0e; }
+  .ctrl-btn.mute-all:hover { border-color: #ffaa00; color: #ffaa00; background: #1a1200; }
+  .ctrl-btn.mute-all.active { border-color: #ffaa00; color: #ffaa00; background: #1a1200; }
+  .ctrl-btn.stop.active { border-color: #ff4444; color: #ff4444; background: #1a0808; }
+  .ctrl-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  body.fs-mode .ctrl-row { display: none !important; }
+
+  body.fs-mode .layout-row,
+  body.fs-mode .footer-bar { display: none !important; }
+  body.fs-mode .player-grid {
+    position: fixed; inset: 0;
+    display: flex !important; flex-direction: row; flex-wrap: wrap;
+    gap: 3px; background: #000; padding: 3px;
+    height: 100vh; width: 100vw; align-content: stretch; align-items: stretch;
+  }
+  body.fs-mode .player-card {
+    flex: 1 1 0; min-width: 0; min-height: 0;
+    border-radius: 4px; display: flex; flex-direction: column;
+  }
+  body.fs-mode .video-wrap {
+    flex: 1 1 0; min-height: 0; aspect-ratio: unset !important;
+    position: relative;
+  }
+  body.fs-mode .player-foot { display: none; }
+  body.fs-mode .player-head { padding: 3px 8px; flex-shrink: 0; }
+  body.fs-mode .player-tag { display: none; }
+  body.fs-mode .player-name { font-size: 9px; }
+  #fs-btn {
+    position: fixed; bottom: 14px; right: 14px; z-index: 9999;
+    padding: 6px 14px; background: #10101a; border: 0.5px solid #22223a;
+    border-radius: 4px; color: #555; font-size: 9px; cursor: pointer;
+    font-family: 'Courier New', monospace; letter-spacing: 1.5px; text-transform: uppercase;
+    transition: all 0.15s; box-shadow: 0 2px 8px #00000066;
+  }
+  #fs-btn:hover { border-color: #ff4444; color: #ff4444; }
+  body.fs-mode #fs-btn { background: #1a0808; border-color: #ff4444; color: #ff4444; }
 
   .player-foot {
     display: flex; align-items: center; gap: 5px;
@@ -239,6 +296,21 @@
   <button class="lay-btn" onclick="setLayout('2',this)">2</button>
   <button class="lay-btn" onclick="setLayout('3',this)">3</button>
   <button class="lay-btn" onclick="setLayout('4',this)">4</button>
+  <button class="lay-btn" onclick="setLayout('sbs',this)">Side by side</button>
+</div>
+
+<!-- CONTROL BUTTONS -->
+<div class="ctrl-row">
+  <span class="ctrl-label">Controls:</span>
+  <button class="ctrl-btn stop" id="btnStop" onclick="stopAll()">
+    <span class="ctrl-dot"></span> Stop all
+  </button>
+  <button class="ctrl-btn sync" id="btnSync" onclick="syncAll()">
+    <span style="font-size:11px;line-height:1;">↻</span> Sync to live
+  </button>
+  <button class="ctrl-btn mute-all" id="btnMuteAll" onclick="toggleMuteAll()">
+    <span style="font-size:10px;line-height:1;" id="muteIcon">🔇</span> <span id="muteLabel">Mute all</span>
+  </button>
 </div>
 
 <!-- PLAYER GRID -->
@@ -287,10 +359,12 @@ function autoLabel(url, idx) {
 }
 
 function colsForCount(n) {
+  if (layoutMode === 'sbs') return Math.min(n, 4);
   if (layoutMode !== 'auto') return parseInt(layoutMode);
   if (n === 1) return 1;
   if (n <= 2)  return 2;
-  if (n <= 4)  return 2;
+  if (n === 3)  return 3;
+  if (n === 4)  return 2;
   if (n <= 6)  return 3;
   return 4;
 }
@@ -344,7 +418,13 @@ function renderTotals() {
 function renderPlayers() {
   const grid = document.getElementById('playerGrid');
   const cols = colsForCount(streams.length);
-  grid.className = 'player-grid cols-'+cols;
+  grid.className = layoutMode === 'sbs' ? 'player-grid sbs' : 'player-grid cols-'+cols;
+  if (layoutMode === 'sbs') {
+    const perRow = Math.min(streams.length, 4);
+    grid.style.gridTemplateColumns = 'repeat('+perRow+', minmax(0, 1fr))';
+  } else {
+    grid.style.gridTemplateColumns = '';
+  }
   grid.innerHTML = '';
 
   if (streams.length === 0) {
@@ -534,14 +614,94 @@ function tick() {
   }
 }
 
+
+function toggleFs() {
+  const isFs = document.body.classList.toggle('fs-mode');
+  document.getElementById('fs-btn').textContent = isFs ? '✕ Exit' : '⛶ View';
+  if (isFs) {
+    // recalc layout for fs: set flex-basis per count
+    applyFsLayout();
+  }
+}
+
+function applyFsLayout() {
+  const n = streams.length;
+  const cards = document.querySelectorAll('.player-card');
+  const grid  = document.getElementById('playerGrid');
+  if (!document.body.classList.contains('fs-mode')) return;
+  // rows: 1 row if <=4, 2 rows if 5-8
+  const rows = n <= 4 ? 1 : 2;
+  const perRow = Math.ceil(n / rows);
+  const basisPct = (100 / perRow).toFixed(4);
+  cards.forEach(c => {
+    c.style.flexBasis = 'calc(' + basisPct + '% - 3px)';
+    c.style.maxWidth  = 'calc(' + basisPct + '% - 3px)';
+  });
+}
+
 function openAll() {
   streams.forEach(s => { if (s.url) window.open(s.url,'_blank'); });
+}
+
+let allMuted = false;
+let stopped  = false;
+
+function stopAll() {
+  stopped = !stopped;
+  const btn = document.getElementById('btnStop');
+  if (stopped) {
+    // Remove all iframes to stop playback
+    document.querySelectorAll('.video-wrap iframe').forEach(f => f.remove());
+    btn.classList.add('active');
+    btn.querySelector('.ctrl-dot').style.background = '#ff4444';
+  } else {
+    // Re-render to restore iframes
+    stopped = false;
+    btn.classList.remove('active');
+    renderPlayers();
+  }
+}
+
+function syncAll() {
+  // Force reload each iframe src to jump to live edge
+  const btn = document.getElementById('btnSync');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+  document.querySelectorAll('.video-wrap iframe').forEach(f => {
+    const src = f.src;
+    f.src = '';
+    setTimeout(() => { f.src = src; }, 80);
+  });
+  // Re-enable after 2s
+  setTimeout(() => {
+    btn.style.opacity = '';
+    btn.style.pointerEvents = '';
+  }, 2000);
+}
+
+function toggleMuteAll() {
+  allMuted = !allMuted;
+  streams.forEach(s => s.muted = allMuted);
+  const btn   = document.getElementById('btnMuteAll');
+  const icon  = document.getElementById('muteIcon');
+  const label = document.getElementById('muteLabel');
+  if (allMuted) {
+    btn.classList.add('active');
+    icon.textContent  = '🔈';
+    label.textContent = 'Unmute all';
+  } else {
+    btn.classList.remove('active');
+    icon.textContent  = '🔇';
+    label.textContent = 'Mute all';
+  }
+  renderPlayers();
 }
 
 function renderAll() {
   renderCvSection();
   renderTotals();
   renderPlayers();
+  if (document.body.classList.contains('fs-mode')) applyFsLayout();
 }
 
 /* ── INIT ── */
@@ -551,5 +711,7 @@ renderUrlPanel();
 document.querySelector('.lay-btn').classList.add('active');
 setInterval(tick, 1000);
 </script>
+
+<button id="fs-btn" onclick="toggleFs()">⛶ View</button>
 </body>
 </html>
