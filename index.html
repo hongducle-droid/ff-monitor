@@ -35,16 +35,16 @@
   .cv-track { height: 2px; background: #1a1a2a; border-radius: 2px; margin-top: 4px; overflow: hidden; }
   .cv-fill  { height: 2px; border-radius: 2px; transition: width 1.2s ease; }
 
-  /* TOTAL BAR */
-  .total-bar {
+  /* TOTAL ROW */
+  .total-row {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 14px; background: #0e0e1a; border: 0.5px solid #22223a;
-    border-radius: 6px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+    padding: 6px 12px; background: #0a0a12; border: 0.5px solid #1a1a2a;
+    border-radius: 6px; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;
   }
-  .total-left { display: flex; flex-direction: column; gap: 2px; }
-  .total-label { font-size: 8px; color: #333; letter-spacing: 0.5px; text-transform: uppercase; }
-  .total-num { font-size: 22px; font-weight: bold; color: #ff4444; letter-spacing: 0.5px; line-height: 1; }
-  .total-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .total-left { display: flex; align-items: center; gap: 10px; }
+  .total-label { font-size: 8px; color: #444; letter-spacing: 0.5px; text-transform: uppercase; }
+  .total-num { font-size: 16px; font-weight: bold; color: #ff4444; letter-spacing: 0.5px; line-height: 1; }
+  .total-right { display: flex; align-items: center; gap: 10px; }
   .countdown-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; }
   .countdown-track { width: 140px; height: 2px; background: #1a1a2a; border-radius: 2px; overflow: hidden; }
   .countdown-fill  { height: 2px; background: #ff4444; border-radius: 2px; transition: width 1s linear; }
@@ -66,36 +66,57 @@
   .url-panel-toggle.open { transform: rotate(180deg); }
   .url-panel-body { padding: 10px 12px; display: none; }
   .url-panel-body.open { display: block; }
-  .url-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-  .url-row  { display: flex; gap: 6px; align-items: center; }
-  .url-num  { font-size: 9px; color: #2a2a4a; min-width: 18px; text-align: right; }
-  .url-inp  {
-    flex: 1; background: #0c0c18; border: 0.5px solid #1c1c2e; border-radius: 4px;
-    padding: 5px 9px; color: #777; font-size: 9px; font-family: 'Inter', sans-serif;
-    outline: none; transition: border-color 0.2s; min-width: 0;
+  .stream-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+  .stream-item {
+    display: flex; align-items: center; gap: 8px;
+    background: #0c0c18; border: 0.5px solid #1c1c2e; border-radius: 5px; padding: 6px 10px;
   }
-  .url-inp:focus { border-color: #2e2e4e; color: #bbb; }
-  .url-inp::placeholder { color: #1a1a2a; }
-  .url-del {
-    padding: 4px 8px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
-    color: #333; font-size: 9px; cursor: pointer; font-family: 'Inter', sans-serif;
-    transition: all 0.13s; flex-shrink: 0;
+  .stream-item-num { font-size: 9px; color: #2a2a4a; min-width: 16px; }
+  .stream-item-title { flex: 1; font-size: 10px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stream-item-url { font-size: 9px; color: #333; flex: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stream-item-del {
+    padding: 2px 7px; background: transparent; border: 0.5px solid #1c1c2e; border-radius: 3px;
+    color: #333; font-size: 9px; cursor: pointer; transition: all 0.13s; flex-shrink: 0;
   }
-  .url-del:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
+  .stream-item-del:hover { border-color: #ff4444; color: #ff4444; background: #1a0808; }
   .url-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .url-add-btn {
-    padding: 5px 12px; background: #10101a; border: 0.5px solid #22223a; border-radius: 4px;
-    color: #666; font-size: 8px; cursor: pointer; font-family: 'Inter', sans-serif;
-    letter-spacing: 1px; text-transform: uppercase; transition: all 0.13s;
-  }
-  .url-add-btn:hover { border-color: #ff4444; color: #ff4444; }
-  .url-apply-btn {
     padding: 5px 14px; background: #ff4444; border: none; border-radius: 4px;
     color: #fff; font-size: 8px; cursor: pointer; font-family: 'Inter', sans-serif;
     letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.13s;
   }
-  .url-apply-btn:hover { background: #cc3333; }
+  .url-add-btn:hover { background: #cc3333; }
   .url-count-note { font-size: 8px; color: #2a2a4a; letter-spacing: 1px; margin-left: auto; }
+  /* MODAL */
+  .url-modal-overlay {
+    display: none; position: fixed; inset: 0; background: #000000aa;
+    align-items: center; justify-content: center; z-index: 9998;
+  }
+  .url-modal-overlay.open { display: flex; }
+  .url-modal {
+    background: #0e0e1a; border: 0.5px solid #22223a; border-radius: 8px;
+    padding: 20px; width: 480px; max-width: 90vw;
+  }
+  .url-modal-title { font-size: 11px; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .url-modal-inp {
+    width: 100%; background: #0c0c18; border: 0.5px solid #2e2e4e; border-radius: 5px;
+    padding: 10px 12px; color: #ccc; font-size: 11px; font-family: 'Inter', sans-serif;
+    outline: none; margin-bottom: 12px;
+  }
+  .url-modal-inp::placeholder { color: #2a2a3a; }
+  .url-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .url-modal-cancel {
+    padding: 6px 14px; background: transparent; border: 0.5px solid #22223a; border-radius: 4px;
+    color: #555; font-size: 9px; cursor: pointer; font-family: 'Inter', sans-serif;
+    text-transform: uppercase; transition: all 0.13s;
+  }
+  .url-modal-cancel:hover { border-color: #555; color: #aaa; }
+  .url-modal-confirm {
+    padding: 6px 16px; background: #ff4444; border: none; border-radius: 4px;
+    color: #fff; font-size: 9px; cursor: pointer; font-family: 'Inter', sans-serif;
+    text-transform: uppercase; transition: all 0.13s;
+  }
+  .url-modal-confirm:hover { background: #cc3333; }
 
   /* LAYOUT */
   .layout-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
@@ -197,7 +218,7 @@
   body.fs-mode { padding: 0; overflow: hidden; }
   body.fs-mode .topbar,
   body.fs-mode .cv-section,
-  body.fs-mode .total-bar,
+  body.fs-mode .total-row,
   body.fs-mode .url-panel,
   body.fs-mode .layout-row,
   body.fs-mode .ctrl-row,
@@ -230,7 +251,7 @@
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo" style="display:flex;align-items:center;gap:8px;">
-    <img src="2023_garena.png" alt="Garena" style="height:22px;width:auto;object-fit:contain;filter:brightness(0) invert(1);">
+    <img src="2023_garena.png" alt="Garena" style="height:22px;width:auto;object-fit:contain;">
     <span>GARENA BROADCAST — LIVE MONITOR</span>
   </div>
   <div class="topbar-right">
@@ -244,15 +265,15 @@
 <!-- CV BAR -->
 <div class="cv-section" id="cvSection"></div>
 
-<!-- TOTAL + COUNTDOWN -->
-<div class="total-bar">
+<!-- TOTAL ROW -->
+<div class="total-row">
   <div class="total-left">
-    <span class="total-label">Total Concurrent Viewers</span>
+    <span class="total-label">Real time viewership</span>
     <span class="total-num" id="totalNum">—</span>
+    <div class="countdown-track" style="width:80px;"><div class="countdown-fill" id="countdownFill" style="width:100%"></div></div>
+    <span class="countdown-note" id="countdownNote">Next update in 60s</span>
   </div>
   <div class="total-right">
-    <span class="countdown-note" id="countdownNote">Next update in 60s</span>
-    <div class="countdown-track"><div class="countdown-fill" id="countdownFill" style="width:100%"></div></div>
     <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh now</button>
   </div>
 </div>
@@ -264,11 +285,24 @@
     <span class="url-panel-toggle open" id="panelToggle">▼</span>
   </div>
   <div class="url-panel-body open" id="panelBody">
-    <div class="url-list" id="urlList"></div>
     <div class="url-actions">
-      <button class="url-add-btn" onclick="addUrlRow()">+ Add stream</button>
-      <button class="url-apply-btn" onclick="applyUrls()">Apply ▶</button>
-      <span class="url-count-note" id="urlCountNote">3 / 8 streams</span>
+      <button class="url-add-btn" onclick="openAddModal()">+ Add stream</button>
+      <span class="url-count-note" id="urlCountNote">0 / 8 streams</span>
+      <button style="padding:4px 10px;background:transparent;border:0.5px solid #1c1c2e;border-radius:3px;color:#333;font-size:8px;cursor:pointer;font-family:Inter,sans-serif;text-transform:uppercase;transition:all 0.13s;margin-left:4px;" onmouseover="this.style.borderColor='#ff4444';this.style.color='#ff4444'" onmouseout="this.style.borderColor='#1c1c2e';this.style.color='#333'" onclick="clearSavedStreams()">Clear saved</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STREAM MODAL -->
+<div class="url-modal-overlay" id="addModal" onclick="if(event.target===this)closeAddModal()">
+  <div class="url-modal">
+    <div class="url-modal-title">+ Add new stream</div>
+    <input class="url-modal-inp" id="modalUrlInp" placeholder="https://youtube.com/watch?v=..."
+      onkeydown="if(event.key==='Enter')confirmAddModal();if(event.key==='Escape')closeAddModal()">
+    <div style="font-size:9px;color:#2a2a4a;margin-bottom:12px;">Paste YouTube livestream URL — title và language sẽ tự động detect sau khi add</div>
+    <div class="url-modal-actions">
+      <button class="url-modal-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="url-modal-confirm" onclick="confirmAddModal()">Add ▶</button>
     </div>
   </div>
 </div>
@@ -318,7 +352,6 @@ const COLORS = ['#ff4444','#22cc66','#4488ff','#ffaa00','#cc44ff','#00cccc','#ff
 let streams    = [];
 let activeIdx  = 0;
 let layoutMode = 'auto';
-let urlRows    = [];
 let allMuted   = false;
 let stopped    = false;
 let countdown  = REFRESH_INTERVAL;
@@ -379,9 +412,12 @@ async function fetchAllCv() {
     const dataMap = {};
     (data.items || []).forEach(item => {
       const cv = item.liveStreamingDetails?.concurrentViewers;
+      const rawLang = item.snippet?.defaultAudioLanguage || item.snippet?.defaultLanguage || null;
+      const lang = rawLang ? rawLang.split('-')[0].toLowerCase() : null;
       dataMap[item.id] = {
         cv: cv ? parseInt(cv) : null,
         title: item.snippet?.title || null,
+        lang,
       };
     });
 
@@ -392,11 +428,15 @@ async function fetchAllCv() {
       s.cv    = d.cv;
       s.maxCv = Math.max(s.maxCv || 0, d.cv || 0);
       if (d.title) s.title = d.title;
+      if (d.lang && !s.lang) s.lang = d.lang;
+      if (!s.lang) s.lang = detectLangFromTitle(d.title || s.title);
     });
 
+    saveToStorage();
     renderCvSection();
     renderTotals();
     renderPlayers();
+    renderStreamList();
   } catch(e) {
   }
 }
@@ -414,11 +454,11 @@ function renderCvSection() {
     d.className = 'cv-card';
     d.innerHTML = `
       <div class="cv-top">
-        <span class="cv-region">${s.title||s.label||'Scene '+(i+1)}</span>
+        <span class="cv-region">${formatStreamTitle(s)}</span>
         <span class="dot" style="background:${col}"></span>
       </div>
       <div class="cv-num" style="color:${col}">${fmtNum(s.cv)}</div>
-      <div class="cv-label">concurrent viewers</div>
+      <div class="cv-label">PCV</div>
       <div class="cv-track"><div class="cv-fill" style="width:${pct}%;background:${col}"></div></div>
     `;
     sec.appendChild(d);
@@ -448,7 +488,7 @@ function renderPlayers() {
     const e = document.createElement('div');
     e.className = 'empty-state';
     e.innerHTML = '<div style="font-size:11px;color:#ff4444;letter-spacing:3px;margin-bottom:8px;">📡 GARENA BROADCAST</div><div>Please enter livestream broadcast URL</div><div style="font-size:8px;color:#1e1e3a;margin-top:6px;letter-spacing:1px;">Open ⚙ Manage Streams above to add URLs</div>';
-    e.onclick = () => { document.getElementById('panelBody').classList.add('open'); addUrlRow(); };
+    e.onclick = () => { document.getElementById('panelBody').classList.add('open'); openAddModal(); };
     grid.appendChild(e);
     return;
   }
@@ -467,7 +507,7 @@ function renderPlayers() {
       <div class="player-head">
         <div class="player-meta">
           <span class="player-tag">SCENE ${String(i+1).padStart(2,'0')}</span>
-          <span class="player-name">${s.title||s.label||'Stream '+(i+1)}</span>
+          <span class="player-name">${formatStreamTitle(s)}</span>
         </div>
         <div class="player-head-right">
           ${src ? '<span class="live-badge">LIVE</span>' : ''}
@@ -498,10 +538,10 @@ function renderPlayers() {
 /* ── STREAM ACTIONS ── */
 function removeStream(i) {
   streams.splice(i,1);
-  urlRows.splice(i,1);
   if (activeIdx >= streams.length) activeIdx = Math.max(0, streams.length-1);
+  saveToStorage();
   renderAll();
-  renderUrlPanel();
+  renderStreamList();
 }
 
 function toggleMute(i) {
@@ -517,10 +557,11 @@ function loadFootUrl(i) {
   streams[i].vid   = extractVid(url);
   streams[i].label = autoLabel(url, i);
   streams[i].title = null;
+  streams[i].lang  = null;
   streams[i].cv    = null;
-  urlRows[i]       = url;
+  saveToStorage();
   renderAll();
-  renderUrlPanel();
+  renderStreamList();
   if (apiKey) fetchAllCv();
 }
 
@@ -530,41 +571,112 @@ function focusFootUrl(i) {
 }
 
 /* ── URL PANEL ── */
-function renderUrlPanel() {
-  const list = document.getElementById('urlList');
-  list.innerHTML = '';
-  urlRows.forEach((url, i) => {
-    const row = document.createElement('div');
-    row.className = 'url-row';
-    row.innerHTML = `
-      <span class="url-num">${i+1}.</span>
-      <input class="url-inp" id="urlrow-${i}" value="${url||''}" placeholder="https://youtube.com/watch?v=..."
-        onkeydown="if(event.key==='Enter')applyUrls()">
-      <button class="url-del" onclick="removeUrlRow(${i})">✕</button>`;
-    list.appendChild(row);
-  });
-  document.getElementById('urlCountNote').textContent = urlRows.length + ' / 8 streams';
+/* ── LANGUAGE / REGION MAP ── */
+const LANG_MAP = {
+  vi: { flag: '🇻🇳', code: 'VI' },
+  en: { flag: '🇬🇧', code: 'EN' },
+  th: { flag: '🇹🇭', code: 'TH' },
+  id: { flag: '🇮🇩', code: 'ID' },
+  ms: { flag: '🇲🇾', code: 'MY' },
+  tl: { flag: '🇵🇭', code: 'PH' },
+  hi: { flag: '🇮🇳', code: 'HI' },
+  ta: { flag: '🇮🇳', code: 'TA' },
+  my: { flag: '🇲🇲', code: 'MM' },
+  km: { flag: '🇰🇭', code: 'KH' },
+  zh: { flag: '🇨🇳', code: 'ZH' },
+  ja: { flag: '🇯🇵', code: 'JA' },
+  ko: { flag: '🇰🇷', code: 'KO' },
+  pt: { flag: '🇧🇷', code: 'PT' },
+  es: { flag: '🇪🇸', code: 'ES' },
+  ar: { flag: '🇸🇦', code: 'AR' },
+  ru: { flag: '🇷🇺', code: 'RU' },
+  tr: { flag: '🇹🇷', code: 'TR' },
+  np: { flag: '🇳🇵', code: 'NP' },
+  ne: { flag: '🇳🇵', code: 'NP' },
+};
+
+function detectLangFromTitle(title) {
+  if (!title) return null;
+  const t = title.toLowerCase();
+  if (/vietnam|việt nam|vn|tiếng việt/i.test(t)) return 'vi';
+  if (/thailand|thai|th/i.test(t)) return 'th';
+  if (/indonesia|id/i.test(t)) return 'id';
+  if (/malaysia|my/i.test(t)) return 'ms';
+  if (/philippines|pilipinas|ph/i.test(t)) return 'tl';
+  if (/india|in|hindi/i.test(t)) return 'hi';
+  if (/nepal|np/i.test(t)) return 'ne';
+  if (/myanmar|mm/i.test(t)) return 'my';
+  if (/cambodia|khmer|kh/i.test(t)) return 'km';
+  if (/sea|southeast asia/i.test(t)) return 'en';
+  return null;
 }
 
-function addUrlRow() {
-  if (urlRows.length >= 8) return;
-  urlRows.push('');
-  renderUrlPanel();
-  setTimeout(() => { document.getElementById('urlrow-'+(urlRows.length-1))?.focus(); }, 50);
+function formatStreamTitle(s) {
+  const lang = s.lang || null;
+  const rawTitle = s.title || s.label || 'Stream';
+  if (!lang) return rawTitle;
+  const info = LANG_MAP[lang];
+  if (!info) return rawTitle;
+  return `${info.flag} ${info.code} · ${rawTitle}`;
 }
 
-function removeUrlRow(i) { urlRows.splice(i,1); renderUrlPanel(); }
+/* ── LOCAL STORAGE ── */
+function saveToStorage() {
+  const data = streams.map(s => ({ url: s.url, vid: s.vid, label: s.label, title: s.title||null, lang: s.lang||null }));
+  try { localStorage.setItem('gb_streams', JSON.stringify(data)); } catch(e) {}
+}
 
-function applyUrls() {
-  urlRows = [];
-  document.querySelectorAll('[id^="urlrow-"]').forEach(inp => { if (inp.value.trim()) urlRows.push(inp.value.trim()); });
-  streams = urlRows.map((url, i) => {
-    const prev = streams[i] || {};
-    return { url, vid: extractVid(url), label: prev.label||autoLabel(url,i), title: prev.title||null, muted: prev.muted||false, cv: null, maxCv: 0 };
-  });
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('gb_streams');
+    if (!raw) return [];
+    return JSON.parse(raw).map(s => ({
+      url: s.url, vid: s.vid||extractVid(s.url),
+      label: s.label||autoLabel(s.url,0),
+      title: s.title||null, lang: s.lang||null,
+      muted: false, cv: null, maxCv: 0
+    }));
+  } catch(e) { return []; }
+}
+
+function clearSavedStreams() {
+  if (!confirm('Xóa tất cả streams đã lưu?')) return;
+  localStorage.removeItem('gb_streams');
+  streams = [];
   renderAll();
-  renderUrlPanel();
+  renderStreamList();
+}
+
+/* ── MODAL ── */
+function openAddModal() {
+  if (streams.length >= 8) return;
+  const modal = document.getElementById('addModal');
+  const inp   = document.getElementById('modalUrlInp');
+  modal.classList.add('open');
+  inp.value = '';
+  setTimeout(() => inp.focus(), 80);
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function confirmAddModal() {
+  const url = document.getElementById('modalUrlInp').value.trim();
+  if (!url) return;
+  const vid = extractVid(url);
+  const idx = streams.length;
+  streams.push({ url, vid, label: autoLabel(url, idx), title: null, lang: null, muted: false, cv: null, maxCv: 0 });
+  saveToStorage();
+  renderAll();
+  renderStreamList();
+  closeAddModal();
   if (apiKey) fetchAllCv();
+}
+
+/* ── STREAM LIST (panel) ── */
+function renderStreamList() {
+  document.getElementById('urlCountNote').textContent = streams.length + ' / 8 streams';
 }
 
 function togglePanel() {
@@ -670,9 +782,10 @@ function tick() {
 }
 
 /* ── INIT ── */
+streams = loadFromStorage();
 renderAll();
-renderUrlPanel();
-if (apiKey) fetchAllCv();
+renderStreamList();
+if (apiKey && streams.length) fetchAllCv();
 setInterval(tick, 1000);
 tick();
 </script>
