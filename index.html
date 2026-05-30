@@ -433,10 +433,13 @@ async function fetchAllCv() {
     });
 
     saveToStorage();
-    renderCvSection();
-    renderTotals();
-    renderPlayers();
-    renderStreamList();
+    // Check if CV cards exist — if not, do full render; otherwise update in-place
+    if (document.getElementById('cv-card-0')) {
+      updateCvInPlace();
+    } else {
+      renderCvSection();
+      renderTotals();
+    }
   } catch(e) {
   }
 }
@@ -452,18 +455,41 @@ function renderCvSection() {
     const pct = s.maxCv > 0 ? Math.min(100, Math.round((s.cv||0)/s.maxCv*100)) : 0;
     const d   = document.createElement('div');
     d.className = 'cv-card';
+    d.id = 'cv-card-' + i;
     d.innerHTML = `
       <div class="cv-top">
-        <span class="cv-region">${formatStreamTitle(s)}</span>
+        <span class="cv-region" id="cv-region-${i}">${formatStreamTitle(s)}</span>
         <span class="dot" style="background:${col}"></span>
       </div>
-      <div class="cv-num" style="color:${col}">${fmtNum(s.cv)}</div>
+      <div class="cv-num" id="cv-num-${i}" style="color:${col}">${fmtNum(s.cv)}</div>
       <div class="cv-label">PCV</div>
-      <div class="cv-track"><div class="cv-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="cv-track"><div class="cv-fill" id="cv-fill-${i}" style="width:${pct}%;background:${col}"></div></div>
     `;
     sec.appendChild(d);
   });
   document.getElementById('streamCount').textContent = n;
+}
+
+/* Update CV numbers in-place without touching iframes */
+function updateCvInPlace() {
+  streams.forEach((s, i) => {
+    const numEl  = document.getElementById('cv-num-' + i);
+    const fillEl = document.getElementById('cv-fill-' + i);
+    const regEl  = document.getElementById('cv-region-' + i);
+    const pct    = s.maxCv > 0 ? Math.min(100, Math.round((s.cv||0)/s.maxCv*100)) : 0;
+    if (numEl)  numEl.textContent  = fmtNum(s.cv);
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (regEl)  regEl.textContent  = formatStreamTitle(s);
+  });
+
+  // Update player headers in-place too (title only, no iframe rebuild)
+  streams.forEach((s, i) => {
+    const nameEl = document.getElementById('player-name-' + i);
+    if (nameEl) nameEl.textContent = formatStreamTitle(s);
+  });
+
+  renderTotals();
+  renderStreamList();
 }
 
 function renderTotals() {
@@ -507,7 +533,7 @@ function renderPlayers() {
       <div class="player-head">
         <div class="player-meta">
           <span class="player-tag">SCENE ${String(i+1).padStart(2,'0')}</span>
-          <span class="player-name">${formatStreamTitle(s)}</span>
+          <span class="player-name" id="player-name-${i}">${formatStreamTitle(s)}</span>
         </div>
         <div class="player-head-right">
           ${src ? '<span class="live-badge">LIVE</span>' : ''}
