@@ -356,7 +356,7 @@ let layoutMode = 'auto';
 let allMuted   = false;
 let stopped    = false;
 let countdown  = REFRESH_INTERVAL;
-let apiKey     = (function(){ try { var k = localStorage.getItem('yt_api_key'); if (!k) { k = prompt('Nhập YouTube Data API key (chỉ lưu trên trình duyệt này):') || ''; if (k) localStorage.setItem('yt_api_key', k); } return k; } catch(e){ return ''; } })();
+let apiKey     = 'AIzaSyAh062R3l4rC5DphWFy9iMmqIHGCSC9oBs';
 
 /* ── HELPERS ── */
 function extractVid(url) {
