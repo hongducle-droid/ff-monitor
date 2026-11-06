@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Garena Broadcast — Live Monitor</title>
 <style>
@@ -355,12 +356,12 @@ let layoutMode = 'auto';
 let allMuted   = false;
 let stopped    = false;
 let countdown  = REFRESH_INTERVAL;
-let apiKey     = localStorage.getItem('yt_api_key') || 'AIzaSyAh062R3l4rC5DphWFy9iMmqIHGCSC9oBs';
+let apiKey     = (function(){ try { var k = localStorage.getItem('yt_api_key'); if (!k) { k = prompt('Nhập YouTube Data API key (chỉ lưu trên trình duyệt này):') || ''; if (k) localStorage.setItem('yt_api_key', k); } return k; } catch(e){ return ''; } })();
 
 /* ── HELPERS ── */
 function extractVid(url) {
   if (!url) return '';
-  const m = url.match(/(?:[?&]v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const m = url.match(/(?:[?&]v=|youtu\.be\/|embed\/|\/live\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : '';
 }
 
@@ -521,7 +522,7 @@ function renderPlayers() {
 
   streams.forEach((s, i) => {
     const src = s.vid
-      ? `https://www.youtube.com/embed/${s.vid}?autoplay=1&${s.muted?'mute=1':''}&rel=0&modestbranding=1`
+      ? `https://www.youtube.com/embed/${s.vid}?autoplay=1&playsinline=1&rel=0&modestbranding=1&origin=${encodeURIComponent(location.origin)}${s.muted?'&mute=1':''}`
       : '';
     const card = document.createElement('div');
     card.className = 'player-card' + (activeIdx === i ? ' active' : '');
@@ -543,7 +544,7 @@ function renderPlayers() {
       </div>
       <div class="video-wrap">
         ${src
-          ? `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
+          ? `<iframe src="${src}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
           : `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();focusFootUrl(${i})">
                <div style="width:36px;height:36px;border:1px solid #1e1e3a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#2a2a4a;font-size:14px;">▶</div>
                <div style="font-size:8px;color:#2a2a3a;letter-spacing:2px;text-transform:uppercase;">Paste URL below</div>
